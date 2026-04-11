@@ -194,7 +194,7 @@ export default function Dashboard() {
           </div>
 
           {/* Mode Switcher */}
-          <div className="relative bg-gray-800 rounded-full p-1 flex items-center shadow-inner w-[300px]">
+          <div className="relative bg-gray-800 rounded-full p-1 flex items-center shadow-inner w-75">
             {["Simulation", "Experiment", "Sim+Exp"].map((m) => (
               <button
                 key={m}
@@ -207,12 +207,12 @@ export default function Dashboard() {
               </button>
             ))}
             <div
-              className={`absolute top-1 bottom-1 w-[96px] bg-blue-600 rounded-full shadow-lg transition-transform duration-300 ease-in-out ${
+              className={`absolute top-1 bottom-1 w-24 bg-blue-600 rounded-full shadow-lg transition-transform duration-300 ease-in-out ${
                 inputs.mode === "Simulation"
                   ? "translate-x-0"
                   : inputs.mode === "Experiment"
-                    ? "translate-x-[98px]"
-                    : "translate-x-[196px]"
+                    ? "translate-x-24.5"
+                    : "translate-x-49"
               }`}
             ></div>
           </div>
@@ -230,7 +230,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* LEFT COLUMN: Just the Diagram */}
         <div className="lg:col-span-1 flex flex-col space-y-6">
-          <div className="bg-white p-2 rounded-2xl shadow-xl flex items-center justify-center border border-gray-700 w-full overflow-hidden h-full min-h-[400px]">
+          <div className="bg-white p-2 rounded-2xl shadow-xl flex items-center justify-center border border-gray-700 w-full overflow-hidden h-full min-h-100">
             <AnimatedDiagram
               t1={currentTemp.toFixed(1)}
               f1={currentTemp.toFixed(1)}
@@ -317,7 +317,7 @@ export default function Dashboard() {
           </div>
 
           <div
-            className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col border border-gray-700 flex-grow"
+            className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col border border-gray-700 grow"
             style={{ minHeight: "400px" }}
           >
             <header className="flex items-center justify-between mb-4 pb-2 border-b border-gray-700">
@@ -336,7 +336,7 @@ export default function Dashboard() {
               </div>
             </header>
 
-            <div className="w-full flex-grow relative pt-4">
+            <div className="w-full grow relative pt-4">
               <div className="absolute inset-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
@@ -449,7 +449,7 @@ export default function Dashboard() {
         </div>
 
         {/* INPUT HISTORY GRAPH */}
-        <div className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col border border-gray-700 w-full h-[400px]">
+        <div className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col border border-gray-700 w-full h-100">
           <header className="flex items-center justify-between mb-4 pb-2 border-b border-gray-700">
             <h3 className="text-lg font-bold text-gray-100">
               Trend: {currentInputParam?.label}
@@ -461,7 +461,7 @@ export default function Dashboard() {
             )}
           </header>
 
-          <div className="w-full flex-grow relative pt-2">
+          <div className="w-full grow relative pt-2">
             <div className="absolute inset-0">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
