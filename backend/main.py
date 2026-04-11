@@ -46,7 +46,10 @@ class CSTRLogger:
         self.serial_no += 1
 
 app = FastAPI()
-
+# Health check route for Render
+@app.get("/")
+async def health_check():
+    return {"status": "online", "message": "Digital Twin Backend is running"}
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -203,4 +206,6 @@ async def websocket_endpoint(websocket: WebSocket):
         pass
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Get the PORT from Render's environment, default to 8000 for local testing
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

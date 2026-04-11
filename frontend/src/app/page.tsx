@@ -54,7 +54,7 @@ export default function Dashboard() {
   const [data, setData] = useState<CSTRData[]>([]);
   const [selectedOutput, setSelectedOutput] = useState<string>("T");
   const [selectedInputGraph, setSelectedInputGraph] = useState<string>("Fin");
-  const [isRunning, setIsRunning] = useState<boolean>(false); // NEW: Track play state
+  const [isRunning, setIsRunning] = useState<boolean>(false); 
 
   const [inputs, setInputs] = useState<InputValues>({
     mode: "Simulation",
@@ -80,12 +80,7 @@ export default function Dashboard() {
     : 298.0;
 
   useEffect(() => {
-    // Change this:
-    // const ws = new WebSocket("ws://localhost:8000/ws/cstr_data");
-
-    // To this:
-    const backendUrl =
-      process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws/cstr_data";
+    const backendUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws/cstr_data";
     const ws = new WebSocket(backendUrl);
 
     ws.onmessage = (event) => {
@@ -129,10 +124,11 @@ export default function Dashboard() {
     }
   };
 
-  // --- NEW: Handle Start/Stop/Reset Actions ---
+  // --- FIXED: Use the correct cloud URL for the control actions ---
   const handleControl = async (action: "start" | "stop" | "reset") => {
     try {
-      await fetch("http://localhost:8000/control", {
+      const httpUrl = process.env.NEXT_PUBLIC_HTTP_URL || "http://localhost:8000";
+      await fetch(`${httpUrl}/control`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
@@ -230,7 +226,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* LEFT COLUMN: Just the Diagram */}
         <div className="lg:col-span-1 flex flex-col space-y-6">
-          <div className="bg-white p-2 rounded-2xl shadow-xl flex items-center justify-center border border-gray-700 w-full overflow-hidden h-full min-h-100">
+          <div className="bg-white p-2 rounded-2xl shadow-xl flex items-center justify-center border border-gray-700 w-full overflow-hidden h-full min-h-[400px]">
             <AnimatedDiagram
               t1={currentTemp.toFixed(1)}
               f1={currentTemp.toFixed(1)}
@@ -449,7 +445,7 @@ export default function Dashboard() {
         </div>
 
         {/* INPUT HISTORY GRAPH */}
-        <div className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col border border-gray-700 w-full h-100">
+        <div className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col border border-gray-700 w-full h-[400px]">
           <header className="flex items-center justify-between mb-4 pb-2 border-b border-gray-700">
             <h3 className="text-lg font-bold text-gray-100">
               Trend: {currentInputParam?.label}
