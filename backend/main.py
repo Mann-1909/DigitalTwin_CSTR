@@ -3,6 +3,8 @@ import random
 import math
 import csv
 import os
+import datetime
+from fastapi.responses import FileResponse
 import numpy as np
 from scipy.integrate import solve_ivp
 from fastapi import FastAPI, WebSocket
@@ -10,43 +12,35 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 class CSTRLogger:
-    def __init__(self, filename="../logging/cstr_log.csv"):
-        self.filename = filename
-        self.serial_no = 1
+    def __init__(self, log_dir="../logging"):
+        self.log_dir = log_dir
+        os.makedirs(self.log_dir, exist_ok=True)
         self.headers = [
             "Serial_No", "Time", "Fin", "Ca0", "Cb0", "T0", "Q", "Tcin", "Fc",
             "Ca", "Cb", "Cc", "Cd", "T", "Tc", "h", "Xa"
         ]
-        self._init_file()
+        self.latest_file = None
+        self.reset_log()
 
-    def _init_file(self):
-        file_exists = os.path.isfile(self.filename)
-        with open(self.filename, mode='a', newline='') as f:
+    def reset_log(self):
+        # Generates a new file with a timestamp every time you hit reset
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.latest_file = os.path.join(self.log_dir, f"cstr_log_{timestamp}.csv")
+        self.serial_no = 1
+        
+        with open(self.latest_file, mode='w', newline='') as f:
             writer = csv.writer(f)
-            if not file_exists:
-                writer.writerow(self.headers)
+            writer.writerow(self.headers)
 
     def log_data(self, time_step, inputs, outputs):
         row = [
-            self.serial_no,
-            time_step,
-            inputs.get("Fin", 0),
-            inputs.get("Ca0", 0),
-            inputs.get("Cb0", 0),
-            inputs.get("T0", 0),
-            inputs.get("Q", 0),
-            inputs.get("Tcin", 0),
-            inputs.get("Fc", 0),
-            outputs.get("Ca", 0),
-            outputs.get("Cb", 0),
-            outputs.get("Cc", 0),
-            outputs.get("Cd", 0),
-            outputs.get("T", 0),
-            outputs.get("Tc", 0),
-            outputs.get("h", 0),
-            outputs.get("Xa", 0)
+            self.serial_no, time_step,
+            inputs.get("Fin", 0), inputs.get("Ca0", 0), inputs.get("Cb0", 0),
+            inputs.get("T0", 0), inputs.get("Q", 0), inputs.get("Tcin", 0), inputs.get("Fc", 0),
+            outputs.get("Ca", 0), outputs.get("Cb", 0), outputs.get("Cc", 0), outputs.get("Cd", 0),
+            outputs.get("T", 0), outputs.get("Tc", 0), outputs.get("h", 0), outputs.get("Xa", 0)
         ]
-        with open(self.filename, mode='a', newline='') as f:
+        with open(self.latest_file, mode='a', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(row)
         self.serial_no += 1
@@ -117,28 +111,20 @@ class CSTRDigitalTwin:
         Xa = (Ca0 - self.state[0]) / Ca0 if Ca0 > 0 else 0.0
         
         return {
-            "Ca": float(self.state[0]),
-            "Cb": float(self.state[1]),
-            "Cc": float(self.state[2]),
-            "Cd": float(self.state[3]),
-            "T": float(self.state[4]),
-            "Tc": float(self.state[5]),
-            "h": float(self.state[6]),
-            "Xa": float(Xa * 100.0)
+            "Ca": float(self.state[0]), "Cb": float(self.state[1]), "Cc": float(self.state[2]),
+            "Cd": float(self.state[3]), "T": float(self.state[4]), "Tc": float(self.state[5]),
+            "h": float(self.state[6]), "Xa": float(Xa * 100.0)
         }
 
+# Global State
 twin = CSTRDigitalTwin()
 logger = CSTRLogger()
+sim_state = {"is_running": False, "time_step": 0}
 
 gui_inputs = {
     "mode": "Simulation",
-    "Fin": 1.667e-6,
-    "T0": 333.0,
-    "Ca0": 100.0,
-    "Cb0": 100.0,
-    "Q": 0.0,
-    "Tcin": 300.0,
-    "Fc": 0.001
+    "Fin": 1.667e-6, "T0": 333.0, "Ca0": 100.0, "Cb0": 100.0,
+    "Q": 0.0, "Tcin": 300.0, "Fc": 0.001
 }
 
 @app.post("/update_inputs")
@@ -147,41 +133,71 @@ async def update_inputs(inputs: dict):
     gui_inputs.update(inputs)
     return {"status": "success"}
 
+# --- NEW: Control Endpoint ---
+@app.post("/control")
+async def control_sim(command: dict):
+    global sim_state, twin, logger
+    cmd = command.get("action")
+    
+    if cmd == "start":
+        sim_state["is_running"] = True
+    elif cmd == "stop":
+        sim_state["is_running"] = False
+    elif cmd == "reset":
+        sim_state["is_running"] = False
+        sim_state["time_step"] = 0
+        twin = CSTRDigitalTwin() # Reset mathematical model to initial state
+        logger.reset_log()       # Generate a brand new CSV file
+        
+    return {"status": "success"}
+
+@app.get("/download_log")
+async def download_log():
+    if logger.latest_file and os.path.exists(logger.latest_file):
+        return FileResponse(
+            path=logger.latest_file, 
+            filename=os.path.basename(logger.latest_file), 
+            media_type='text/csv'
+        )
+    return {"error": "Log file not generated yet."}
+
 @app.websocket("/ws/cstr_data")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    time_step = 0
     try:
         while True:
-            dt = 0.5
-            sim_data = twin.step(dt, gui_inputs)
+            # Only calculate and stream data if the simulation is currently running
+            if sim_state["is_running"]:
+                dt = 0.5
+                sim_data = twin.step(dt, gui_inputs)
 
-            payload = {
-                "time": time_step,
-                "mode": gui_inputs["mode"],
-            }
-
-            for key, val in sim_data.items():
-                payload[f"simulated_{key}"] = round(val, 4)
-                noise_margin = val * 0.015
-                payload[f"experimental_{key}"] = round(val + random.uniform(-noise_margin, noise_margin), 4)
-
-            if gui_inputs["mode"] == "Experiment":
-                payload["live_inputs"] = {
-                    "Fin": round(gui_inputs["Fin"] * (1 + random.uniform(-0.02, 0.02)), 8),
-                    "T0": round(gui_inputs["T0"] + random.uniform(-0.5, 0.5), 2),
-                    "Ca0": round(gui_inputs["Ca0"] + random.uniform(-0.1, 0.1), 2),
-                    "Cb0": round(gui_inputs["Cb0"] + random.uniform(-0.1, 0.1), 2),
-                    "Q": round(gui_inputs["Q"] + random.uniform(-5.0, 5.0), 2),
-                    "Tcin": round(gui_inputs["Tcin"] + random.uniform(-0.5, 0.5), 2),
-                    "Fc": round(gui_inputs["Fc"] * (1 + random.uniform(-0.02, 0.02)), 8)
+                payload = {
+                    "time": sim_state["time_step"],
+                    "mode": gui_inputs["mode"],
                 }
 
-            logger.log_data(time_step, gui_inputs, sim_data)
+                for key, val in sim_data.items():
+                    payload[f"simulated_{key}"] = round(val, 4)
+                    noise_margin = val * 0.015
+                    payload[f"experimental_{key}"] = round(val + random.uniform(-noise_margin, noise_margin), 4)
 
-            await websocket.send_json(payload)
-            time_step += 1
-            await asyncio.sleep(0.5)
+                if gui_inputs["mode"] == "Experiment":
+                    payload["live_inputs"] = {
+                        "Fin": round(gui_inputs["Fin"] * (1 + random.uniform(-0.02, 0.02)), 8),
+                        "T0": round(gui_inputs["T0"] + random.uniform(-0.5, 0.5), 2),
+                        "Ca0": round(gui_inputs["Ca0"] + random.uniform(-0.1, 0.1), 2),
+                        "Cb0": round(gui_inputs["Cb0"] + random.uniform(-0.1, 0.1), 2),
+                        "Q": round(gui_inputs["Q"] + random.uniform(-5.0, 5.0), 2),
+                        "Tcin": round(gui_inputs["Tcin"] + random.uniform(-0.5, 0.5), 2),
+                        "Fc": round(gui_inputs["Fc"] * (1 + random.uniform(-0.02, 0.02)), 8)
+                    }
+
+                logger.log_data(sim_state["time_step"], gui_inputs, sim_data)
+                await websocket.send_json(payload)
+                
+                sim_state["time_step"] += 1
+
+            await asyncio.sleep(0.5) # Wait 0.5s whether running or paused
 
     except Exception as e:
         pass
