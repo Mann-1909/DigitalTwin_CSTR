@@ -7,7 +7,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from "recharts";
 import AnimatedDiagram from "../components/AnimatedDiagram";
@@ -45,7 +44,7 @@ const INPUT_PARAMS_LIST = [
 ];
 
 type CSTRData = {
-  time: number;
+  time: string; 
   mode: string;
   [key: string]: any;
 };
@@ -55,6 +54,9 @@ export default function Dashboard() {
   const [selectedOutput, setSelectedOutput] = useState<string>("T");
   const [selectedInputGraph, setSelectedInputGraph] = useState<string>("Fin");
   const [isRunning, setIsRunning] = useState<boolean>(false); 
+  
+  // NEW: View Time Window State (defaults to 30 seconds)
+  const [timeWindow, setTimeWindow] = useState<number>(30);
 
   const [inputs, setInputs] = useState<InputValues>({
     mode: "Simulation",
@@ -103,7 +105,8 @@ export default function Dashboard() {
 
       setData((prevData) => {
         const updatedData = [...prevData, dataPoint];
-        return updatedData.length > 50 ? updatedData.slice(1) : updatedData;
+        // INCREASED memory length to 1000 points so "All" view works better
+        return updatedData.length > 1000 ? updatedData.slice(1) : updatedData;
       });
     };
 
@@ -124,7 +127,6 @@ export default function Dashboard() {
     }
   };
 
-  // --- FIXED: Use the correct cloud URL for the control actions ---
   const handleControl = async (action: "start" | "stop" | "reset") => {
     try {
       const httpUrl = process.env.NEXT_PUBLIC_HTTP_URL || "http://localhost:8000";
@@ -138,7 +140,7 @@ export default function Dashboard() {
       if (action === "stop") setIsRunning(false);
       if (action === "reset") {
         setIsRunning(false);
-        setData([]); // Clear graphs on the UI instantly
+        setData([]); 
       }
     } catch (error) {
       console.error("Error sending control command:", error);
@@ -154,6 +156,9 @@ export default function Dashboard() {
   const currentInputParam = INPUT_PARAMS_LIST.find(
     (p) => p.key === selectedInputGraph,
   );
+
+  // NEW: Slice the data based on the chosen window before rendering the charts
+  const chartData = timeWindow === 0 ? data : data.slice(-timeWindow);
 
   return (
     <div className="p-6 md:p-8 bg-gray-900 min-h-screen text-white flex flex-col font-sans overflow-x-hidden">
@@ -190,7 +195,7 @@ export default function Dashboard() {
           </div>
 
           {/* Mode Switcher */}
-          <div className="relative bg-gray-800 rounded-full p-1 flex items-center shadow-inner w-75">
+          <div className="relative bg-gray-800 rounded-full p-1 flex items-center shadow-inner w-[300px]">
             {["Simulation", "Experiment", "Sim+Exp"].map((m) => (
               <button
                 key={m}
@@ -203,12 +208,12 @@ export default function Dashboard() {
               </button>
             ))}
             <div
-              className={`absolute top-1 bottom-1 w-24 bg-blue-600 rounded-full shadow-lg transition-transform duration-300 ease-in-out ${
+              className={`absolute top-1 bottom-1 w-[96px] bg-blue-600 rounded-full shadow-lg transition-transform duration-300 ease-in-out ${
                 inputs.mode === "Simulation"
                   ? "translate-x-0"
                   : inputs.mode === "Experiment"
-                    ? "translate-x-24.5"
-                    : "translate-x-49"
+                    ? "translate-x-[98px]"
+                    : "translate-x-[196px]"
               }`}
             ></div>
           </div>
@@ -226,7 +231,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* LEFT COLUMN: Just the Diagram */}
         <div className="lg:col-span-1 flex flex-col space-y-6">
-          <div className="bg-white p-2 rounded-2xl shadow-xl flex items-center justify-center border border-gray-700 w-full overflow-hidden h-full min-h-[400px]">
+          <div className="bg-white p-2 rounded-2xl shadow-xl flex items-center justify-center border border-gray-700 w-full overflow-hidden h-[450px]">
             <AnimatedDiagram
               t1={currentTemp.toFixed(1)}
               f1={currentTemp.toFixed(1)}
@@ -244,8 +249,10 @@ export default function Dashboard() {
 
         {/* RIGHT COLUMN: Output Graphs */}
         <div className="lg:col-span-2 flex flex-col space-y-4">
-          <div className="bg-gray-800 p-4 rounded-2xl shadow-xl border border-gray-700">
-            <div className="grid grid-cols-4 gap-3">
+          <div className="bg-gray-800 p-4 rounded-2xl shadow-xl border border-gray-700 flex justify-between items-center">
+            
+            {/* The Selectors */}
+            <div className="flex gap-3 flex-grow mr-4">
               <select
                 title="conc"
                 value={
@@ -254,18 +261,15 @@ export default function Dashboard() {
                     : "default"
                 }
                 onChange={(e) => {
-                  if (e.target.value !== "default")
-                    setSelectedOutput(e.target.value);
+                  if (e.target.value !== "default") setSelectedOutput(e.target.value);
                 }}
-                className={`w-full p-2 text-sm rounded outline-none border transition-colors cursor-pointer ${
+                className={`flex-1 p-2 text-sm rounded outline-none border transition-colors cursor-pointer ${
                   ["Ca", "Cb", "Cc", "Cd"].includes(selectedOutput)
                     ? "bg-gray-900 border-blue-500 text-blue-400 font-bold"
                     : "bg-gray-800 border-gray-600 text-gray-300 hover:border-gray-500"
                 }`}
               >
-                <option value="default" disabled>
-                  Concentration...
-                </option>
+                <option value="default" disabled>Concentration...</option>
                 <option value="Ca">Conc. A (Ca)</option>
                 <option value="Cb">Conc. B (Cb)</option>
                 <option value="Cc">Conc. C (Cc)</option>
@@ -280,42 +284,53 @@ export default function Dashboard() {
                     : "default"
                 }
                 onChange={(e) => {
-                  if (e.target.value !== "default")
-                    setSelectedOutput(e.target.value);
+                  if (e.target.value !== "default") setSelectedOutput(e.target.value);
                 }}
-                className={`w-full p-2 text-sm rounded outline-none border transition-colors cursor-pointer ${
+                className={`flex-1 p-2 text-sm rounded outline-none border transition-colors cursor-pointer ${
                   ["T", "Tc"].includes(selectedOutput)
                     ? "bg-gray-900 border-blue-500 text-blue-400 font-bold"
                     : "bg-gray-800 border-gray-600 text-gray-300 hover:border-gray-500"
                 }`}
               >
-                <option value="default" disabled>
-                  Temperature...
-                </option>
+                <option value="default" disabled>Temperature...</option>
                 <option value="T">Reactor (T)</option>
                 <option value="Tc">Coolant (Tc)</option>
               </select>
 
               <button
                 onClick={() => setSelectedOutput("h")}
-                className={`w-full p-2 text-sm rounded border transition-colors ${selectedOutput === "h" ? "bg-gray-900 border-blue-500 text-blue-400 font-bold" : "bg-gray-800 border-gray-600 text-gray-300 hover:border-gray-500"}`}
+                className={`flex-1 p-2 text-sm rounded border transition-colors ${selectedOutput === "h" ? "bg-gray-900 border-blue-500 text-blue-400 font-bold" : "bg-gray-800 border-gray-600 text-gray-300 hover:border-gray-500"}`}
               >
                 Liquid Level (h)
               </button>
 
               <button
                 onClick={() => setSelectedOutput("Xa")}
-                className={`w-full p-2 text-sm rounded border transition-colors ${selectedOutput === "Xa" ? "bg-gray-900 border-blue-500 text-blue-400 font-bold" : "bg-gray-800 border-gray-600 text-gray-300 hover:border-gray-500"}`}
+                className={`flex-1 p-2 text-sm rounded border transition-colors ${selectedOutput === "Xa" ? "bg-gray-900 border-blue-500 text-blue-400 font-bold" : "bg-gray-800 border-gray-600 text-gray-300 hover:border-gray-500"}`}
               >
                 Conversion (Xa)
               </button>
             </div>
+
+            {/* NEW: View Mode Window */}
+            <div className="flex items-center gap-2 pl-4 border-l border-gray-700">
+               <span className="text-xs text-gray-400 whitespace-nowrap">View:</span>
+               <select 
+                 title="View Window"
+                 value={timeWindow}
+                 onChange={(e) => setTimeWindow(parseInt(e.target.value))}
+                 className="bg-gray-900 text-sm font-mono border border-gray-600 rounded text-gray-200 p-1.5 focus:border-blue-500 outline-none"
+               >
+                 <option value={30}>Last 30s</option>
+                 <option value={60}>Last 60s</option>
+                 <option value={300}>Last 5 Mins</option>
+                 <option value={0}>All Time</option>
+               </select>
+            </div>
+
           </div>
 
-          <div
-            className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col border border-gray-700 grow"
-            style={{ minHeight: "400px" }}
-          >
+          <div className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col border border-gray-700 h-[450px]">
             <header className="flex items-center justify-between mb-4 pb-2 border-b border-gray-700">
               <h2 className="text-xl font-bold text-gray-100 flex items-center gap-2">
                 <span className="text-red-400">📈</span> {currentParam?.label}
@@ -332,82 +347,89 @@ export default function Dashboard() {
               </div>
             </header>
 
-            <div className="w-full grow relative pt-4">
-              <div className="absolute inset-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={data}
-                    margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="#374151"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="time"
-                      stroke="#9ca3af"
-                      tick={{ fontSize: 12 }}
-                    />
-                    <YAxis
-                      stroke="#9ca3af"
-                      domain={["auto", "auto"]}
-                      tick={{ fontSize: 12 }}
-                      label={{
-                        value: currentParam?.unit,
-                        angle: -90,
-                        position: "insideLeft",
-                        fill: "#9ca3af",
-                        offset: 15,
-                      }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#1F2937",
-                        border: "1px solid #374151",
-                        borderRadius: "8px",
-                      }}
-                    />
+            <div className="w-full h-[320px] mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={chartData} // Using the sliced data here!
+                  margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#374151"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="time"
+                    stroke="#9ca3af"
+                    tick={{ fontSize: 12 }}
+                    minTickGap={40} 
+                    label={{
+                      value: "System Time (HH:MM:SS)",
+                      position: "insideBottom",
+                      offset: -15,
+                      fill: "#10b981", // Emerald Green
+                      fontSize: 13,
+                      fontWeight: "bold"
+                    }}
+                  />
+                  <YAxis
+                    stroke="#9ca3af"
+                    domain={["auto", "auto"]}
+                    tick={{ fontSize: 12 }}
+                    label={{
+                      value: currentParam?.unit,
+                      angle: -90,
+                      position: "insideLeft",
+                      fill: "#3b82f6", // Blue
+                      fontSize: 14,
+                      fontWeight: "bold"
+                    }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1F2937",
+                      border: "1px solid #374151",
+                      borderRadius: "8px",
+                    }}
+                  />
 
-                    {inputs.mode !== "Experiment" && (
-                      <Line
-                        type="monotone"
-                        dataKey={`simulated_${selectedOutput}`}
-                        stroke="#3b82f6"
-                        strokeWidth={3}
-                        dot={false}
-                        name="Simulated"
-                        isAnimationActive={false}
-                      />
-                    )}
-                    {inputs.mode !== "Simulation" && (
-                      <Line
-                        type="monotone"
-                        dataKey={`experimental_${selectedOutput}`}
-                        stroke="#ef4444"
-                        strokeWidth={2}
-                        strokeDasharray="4 4"
-                        dot={false}
-                        name="Sensors"
-                        isAnimationActive={false}
-                      />
-                    )}
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+                  {inputs.mode !== "Experiment" && (
+                    <Line
+                      type="monotone"
+                      dataKey={`simulated_${selectedOutput}`}
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      dot={false}
+                      name="Simulated"
+                      isAnimationActive={false}
+                    />
+                  )}
+                  {inputs.mode !== "Simulation" && (
+                    <Line
+                      type="monotone"
+                      dataKey={`experimental_${selectedOutput}`}
+                      stroke="#ef4444"
+                      strokeWidth={2}
+                      strokeDasharray="4 4"
+                      dot={false}
+                      name="Sensors"
+                      isAnimationActive={false}
+                    />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ================= BOTTOM SECTION: INTERACTIVE INPUTS ================= */}
+      {/* BOTTOM SECTION */}
       <div className="border-t border-gray-800 pt-8 mt-4">
         <h2 className="text-2xl font-bold text-gray-100 flex items-center gap-2 mb-6">
           <span className="text-emerald-400">🎛️</span> Input Parameters &
           History
         </h2>
 
-        {/* 7 Interactive Input Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
           {INPUT_PARAMS_LIST.map((param) => (
             <div
@@ -444,7 +466,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* INPUT HISTORY GRAPH */}
         <div className="bg-gray-800 p-6 rounded-2xl shadow-xl flex flex-col border border-gray-700 w-full h-[400px]">
           <header className="flex items-center justify-between mb-4 pb-2 border-b border-gray-700">
             <h3 className="text-lg font-bold text-gray-100">
@@ -457,58 +478,66 @@ export default function Dashboard() {
             )}
           </header>
 
-          <div className="w-full grow relative pt-2">
-            <div className="absolute inset-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={data}
-                  margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#374151"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="time"
-                    stroke="#9ca3af"
-                    tick={{ fontSize: 12 }}
-                  />
-                  <YAxis
-                    stroke="#9ca3af"
-                    domain={["auto", "auto"]}
-                    tick={{ fontSize: 12 }}
-                    label={{
-                      value: currentInputParam?.unit,
-                      angle: -90,
-                      position: "insideLeft",
-                      fill: "#9ca3af",
-                      offset: 15,
-                    }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#1F2937",
-                      border: "1px solid #374151",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Line
-                    type="stepAfter"
-                    dataKey={`input_${selectedInputGraph}`}
-                    stroke="#10b981"
-                    strokeWidth={3}
-                    dot={false}
-                    name="Value"
-                    isAnimationActive={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+          <div className="w-full h-[280px] mt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={chartData} // Using sliced data here as well!
+                margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#374151"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="time"
+                  stroke="#9ca3af"
+                  tick={{ fontSize: 12 }}
+                  minTickGap={40} 
+                  label={{
+                    value: "System Time (HH:MM:SS)",
+                    position: "insideBottom",
+                    offset: -15,
+                    fill: "#10b981", 
+                    fontSize: 13,
+                    fontWeight: "bold"
+                  }}
+                />
+                <YAxis
+                  stroke="#9ca3af"
+                  domain={["auto", "auto"]}
+                  tick={{ fontSize: 12 }}
+                  label={{
+                    value: currentInputParam?.unit,
+                    angle: -90,
+                    position: "insideLeft",
+                    fill: "#3b82f6", 
+                    fontSize: 14,
+                    fontWeight: "bold",
+                    offset: 15,
+                  }}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#1F2937",
+                    border: "1px solid #374151",
+                    borderRadius: "8px",
+                  }}
+                />
+                <Line
+                  type="stepAfter"
+                  dataKey={`input_${selectedInputGraph}`}
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  dot={false}
+                  name="Value"
+                  isAnimationActive={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

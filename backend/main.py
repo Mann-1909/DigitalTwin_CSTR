@@ -23,7 +23,6 @@ class CSTRLogger:
         self.reset_log()
 
     def reset_log(self):
-        # Generates a new file with a timestamp every time you hit reset
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         self.latest_file = os.path.join(self.log_dir, f"cstr_log_{timestamp}.csv")
         self.serial_no = 1
@@ -32,9 +31,9 @@ class CSTRLogger:
             writer = csv.writer(f)
             writer.writerow(self.headers)
 
-    def log_data(self, time_step, inputs, outputs):
+    def log_data(self, cpu_time_str, inputs, outputs):
         row = [
-            self.serial_no, time_step,
+            self.serial_no, cpu_time_str,
             inputs.get("Fin", 0), inputs.get("Ca0", 0), inputs.get("Cb0", 0),
             inputs.get("T0", 0), inputs.get("Q", 0), inputs.get("Tcin", 0), inputs.get("Fc", 0),
             outputs.get("Ca", 0), outputs.get("Cb", 0), outputs.get("Cc", 0), outputs.get("Cd", 0),
@@ -46,10 +45,11 @@ class CSTRLogger:
         self.serial_no += 1
 
 app = FastAPI()
-# Health check route for Render
+
 @app.get("/")
 async def health_check():
     return {"status": "online", "message": "Digital Twin Backend is running"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -119,10 +119,9 @@ class CSTRDigitalTwin:
             "h": float(self.state[6]), "Xa": float(Xa * 100.0)
         }
 
-# Global State
 twin = CSTRDigitalTwin()
 logger = CSTRLogger()
-sim_state = {"is_running": False, "time_step": 0}
+sim_state = {"is_running": False}
 
 gui_inputs = {
     "mode": "Simulation",
@@ -136,7 +135,6 @@ async def update_inputs(inputs: dict):
     gui_inputs.update(inputs)
     return {"status": "success"}
 
-# --- NEW: Control Endpoint ---
 @app.post("/control")
 async def control_sim(command: dict):
     global sim_state, twin, logger
@@ -148,9 +146,8 @@ async def control_sim(command: dict):
         sim_state["is_running"] = False
     elif cmd == "reset":
         sim_state["is_running"] = False
-        sim_state["time_step"] = 0
-        twin = CSTRDigitalTwin() # Reset mathematical model to initial state
-        logger.reset_log()       # Generate a brand new CSV file
+        twin = CSTRDigitalTwin() 
+        logger.reset_log()       
         
     return {"status": "success"}
 
@@ -169,13 +166,16 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
         while True:
-            # Only calculate and stream data if the simulation is currently running
             if sim_state["is_running"]:
-                dt = 0.5
+                # UPDATED: 1-second math step to match 1-second UI refresh
+                dt = 1.0 
                 sim_data = twin.step(dt, gui_inputs)
 
+                # UPDATED: Pure HH:MM:SS format
+                current_time = datetime.datetime.now().strftime("%H:%M:%S")
+
                 payload = {
-                    "time": sim_state["time_step"],
+                    "time": current_time,
                     "mode": gui_inputs["mode"],
                 }
 
@@ -195,17 +195,15 @@ async def websocket_endpoint(websocket: WebSocket):
                         "Fc": round(gui_inputs["Fc"] * (1 + random.uniform(-0.02, 0.02)), 8)
                     }
 
-                logger.log_data(sim_state["time_step"], gui_inputs, sim_data)
+                logger.log_data(current_time, gui_inputs, sim_data)
                 await websocket.send_json(payload)
-                
-                sim_state["time_step"] += 1
 
-            await asyncio.sleep(0.5) # Wait 0.5s whether running or paused
+            # UPDATED: Exactly 1.0 second intervals
+            await asyncio.sleep(1.0) 
 
     except Exception as e:
         pass
 
 if __name__ == "__main__":
-    # Get the PORT from Render's environment, default to 8000 for local testing
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
