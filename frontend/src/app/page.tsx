@@ -12,14 +12,12 @@ import {
 } from "recharts";
 import AnimatedDiagram from "../components/AnimatedDiagram";
 
-// 1. UPDATED PARAMETERS: Matches the dual-feed backend
 type InputValues = {
   mode: "Simulation" | "Experiment" | "Sim+Exp";
-  FA0: number;
-  FB0: number;
-  CAin: number;
-  CBin: number;
+  Fin: number;
   T0: number;
+  Ca0: number;
+  Cb0: number;
   Q: number;
   Tcin: number;
   Fc: number;
@@ -37,11 +35,10 @@ const OUTPUT_PARAMS = [
 ];
 
 const INPUT_PARAMS_LIST = [
-  { key: "FA0", label: "Flow Rate A", unit: "m³/s", step: 0.001 },
-  { key: "FB0", label: "Flow Rate B", unit: "m³/s", step: 0.001 },
-  { key: "CAin", label: "Inlet Conc. A", unit: "mol/m³", step: 0.1 },
-  { key: "CBin", label: "Inlet Conc. B", unit: "mol/m³", step: 0.1 },
+  { key: "Fin", label: "Feed Flow Rate", unit: "m³/s", step: 0.001 },
   { key: "T0", label: "Inlet Temp", unit: "K", step: 1.0 },
+  { key: "Ca0", label: "Initial Conc. A", unit: "mol/m³", step: 0.1 },
+  { key: "Cb0", label: "Initial Conc. B", unit: "mol/m³", step: 0.1 },
   { key: "Q", label: "Heat Duty", unit: "W", step: 10.0 },
   { key: "Tcin", label: "Coolant Temp", unit: "K", step: 1.0 },
   { key: "Fc", label: "Coolant Flow", unit: "m³/s", step: 0.001 },
@@ -55,23 +52,20 @@ type CSTRData = {
 
 export default function Dashboard() {
   const [data, setData] = useState<CSTRData[]>([]);
-  const [selectedOutput, setSelectedOutput] = useState<string>("T");
-  const [selectedInputGraph, setSelectedInputGraph] = useState<string>("FA0");
+  const [selectedOutput, setSelectedOutput] = useState<string>("Xa");
+  const [selectedInputGraph, setSelectedInputGraph] = useState<string>("Fin");
   const [isRunning, setIsRunning] = useState<boolean>(false); 
   const [timeWindow, setTimeWindow] = useState<number>(30);
   
-  // Theme Management
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // 2. UPDATED DEFAULTS: Incorporating your requested 0.02 (split) and 293.0 values
   const [inputs, setInputs] = useState<InputValues>({
     mode: "Simulation",
-    FA0: 0.01,
-    FB0: 0.01,
-    CAin: 100.0,
-    CBin: 100.0,
+    Fin: 0.02,
     T0: 293.0,
+    Ca0: 100.0,
+    Cb0: 100.0,
     Q: 0.0,
     Tcin: 293.0,
     Fc: 0.01,
@@ -79,7 +73,6 @@ export default function Dashboard() {
 
   const inputsRef = useRef(inputs);
   
-  // Prevent hydration mismatch
   useEffect(() => { setMounted(true) }, []);
   
   useEffect(() => {
@@ -91,7 +84,7 @@ export default function Dashboard() {
     ? inputs.mode === "Simulation"
       ? latestData.simulated_T
       : latestData.experimental_T
-    : inputs.T0; // Default to feed temp
+    : 298.0;
 
   useEffect(() => {
     const backendUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws/cstr_data";
@@ -166,17 +159,19 @@ export default function Dashboard() {
   const currentInputParam = INPUT_PARAMS_LIST.find((p) => p.key === selectedInputGraph);
   const chartData = timeWindow === 0 ? data : data.slice(-timeWindow);
 
-  // --- ACADEMIC / CLEAN TECH COLOR PALETTE ---
+  // IBM/MATLAB VIBE COLORS
   const isDark = resolvedTheme === "dark";
-  const gridColor = isDark ? "#1e293b" : "#e2e8f0"; // slate-800 / slate-200
-  const axisColor = isDark ? "#64748b" : "#94a3b8"; // slate-500 / slate-400
-  const tooltipBg = isDark ? "#020617" : "#ffffff"; // slate-950 / white
+  const gridColor = isDark ? "#1e293b" : "#e2e8f0"; 
+  const axisColor = isDark ? "#64748b" : "#94a3b8"; 
+  const tooltipBg = isDark ? "#020617" : "#ffffff"; 
   const tooltipBorder = isDark ? "#334155" : "#cbd5e1"; 
   const textColor = isDark ? "#f8fafc" : "#0f172a";
   
   const simColor = "#2563eb"; // Royal Blue
   const expColor = "#d97706"; // Amber
   const inputColor = "#059669"; // Emerald Green
+  const xLabelColor = "#059669"; 
+  const yLabelColor = "#2563eb"; 
 
   if (!mounted) return null;
 
@@ -190,22 +185,20 @@ export default function Dashboard() {
             CSTR <span className="text-blue-600 dark:text-blue-500 font-light">Digital Twin</span>
           </h1>
           
-          {/* THEME TOGGLE */}
           <button 
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="flex items-center justify-center w-9 h-9 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-sm transition-all"
             title="Toggle Theme"
           >
             {resolvedTheme === 'dark' ? (
-              <svg xmlns="http://www.w3000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
             ) : (
-              <svg xmlns="http://www.w3000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
             )}
           </button>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          {/* PLAYBACK CONTROLS */}
           <div className="flex gap-2 mr-4 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
             {!isRunning ? (
               <button onClick={() => handleControl("start")} className="bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 px-4 py-1.5 rounded-md text-sm font-semibold transition-all">
@@ -221,7 +214,6 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* Mode Switcher */}
           <div className="relative bg-slate-200 dark:bg-slate-800 rounded-lg p-1 flex items-center shadow-inner w-[300px]">
             {["Simulation", "Experiment", "Sim+Exp"].map((m) => (
               <button
@@ -242,7 +234,7 @@ export default function Dashboard() {
           </div>
 
           <button onClick={handleDownloadCSV} className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 text-slate-700 dark:text-slate-300 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-            <svg xmlns="http://www.w3000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
             Export Log
           </button>
         </div>
@@ -251,7 +243,6 @@ export default function Dashboard() {
       {/* TOP SECTION: 1/3 and 2/3 LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
-        {/* LEFT COLUMN: Diagram */}
         <div className="lg:col-span-1 flex flex-col space-y-6">
           <div className="bg-white dark:bg-slate-900 p-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 w-full overflow-hidden h-[450px] flex items-center justify-center">
             <AnimatedDiagram
@@ -264,12 +255,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Output Graphs */}
         <div className="lg:col-span-2 flex flex-col space-y-4">
           <div className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center">
             
-            {/* Output Selectors */}
-            <div className="flex gap-2 flex-grow mr-4">
+            <div className="flex gap-3 flex-grow mr-4">
               <select
                 title="conc"
                 value={["Ca", "Cb", "Cc", "Cd"].includes(selectedOutput) ? selectedOutput : "default"}
@@ -325,8 +314,7 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Time Window */}
-            <div className="flex items-center gap-2 pl-4 border-l border-slate-300 dark:border-slate-700">
+            <div className="flex items-center gap-2 pl-4 border-l border-slate-200 dark:border-slate-700">
                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">WINDOW</span>
                <select 
                  title="View Window"
@@ -354,18 +342,40 @@ export default function Dashboard() {
               </div>
             </header>
 
-            <div className="w-full flex-grow relative">
+            <div className="w-full flex-grow relative pb-2 pl-2">
               <div className="absolute inset-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                  <LineChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 25 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                     <XAxis 
-                      dataKey="time" stroke={axisColor} tick={{ fontSize: 11, fill: axisColor }} minTickGap={40} 
-                      tickMargin={10}
+                      dataKey="time" 
+                      stroke={axisColor} 
+                      tick={{ fontSize: 11, fill: axisColor }} 
+                      minTickGap={40} 
+                      tickMargin={12}
+                      label={{ 
+                        value: "System Time (HH:MM:SS)", 
+                        position: "insideBottom", 
+                        offset: -20, 
+                        fill: xLabelColor, 
+                        fontSize: 13, 
+                        fontWeight: "bold" 
+                      }}
                     />
                     <YAxis 
-                      stroke={axisColor} domain={["auto", "auto"]} tick={{ fontSize: 11, fill: axisColor }}
+                      stroke={axisColor} 
+                      domain={["auto", "auto"]} 
+                      tick={{ fontSize: 11, fill: axisColor }}
                       tickMargin={10}
+                      label={{ 
+                        value: currentParam?.unit, 
+                        angle: -90, 
+                        position: "insideLeft", 
+                        fill: yLabelColor, 
+                        fontSize: 14, 
+                        fontWeight: "bold", 
+                        offset: 5 
+                      }}
                     />
                     <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: "6px", color: textColor, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
 
@@ -386,12 +396,11 @@ export default function Dashboard() {
       {/* BOTTOM SECTION */}
       <div className="border-t border-slate-200 dark:border-slate-800 pt-8 mt-4">
         <h2 className="text-xl font-semibold flex items-center gap-2 mb-6 text-slate-800 dark:text-slate-100">
-          <svg xmlns="http://www.w3000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-500"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><circle cx="12" cy="12" r="4"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-500"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><circle cx="12" cy="12" r="4"/></svg>
           System Inputs & Disturbance Control
         </h2>
 
-        {/* 8 Column Grid for the 8 Parameters */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
           {INPUT_PARAMS_LIST.map((param) => (
             <div
               key={param.key}
@@ -438,18 +447,40 @@ export default function Dashboard() {
             </div>
           </header>
 
-          <div className="w-full flex-grow relative">
+          <div className="w-full flex-grow relative pb-2 pl-2">
             <div className="absolute inset-0">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 25 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                   <XAxis 
-                    dataKey="time" stroke={axisColor} tick={{ fontSize: 11, fill: axisColor }} minTickGap={40} 
-                    tickMargin={10}
+                    dataKey="time" 
+                    stroke={axisColor} 
+                    tick={{ fontSize: 11, fill: axisColor }} 
+                    minTickGap={40} 
+                    tickMargin={12}
+                    label={{ 
+                      value: "System Time (HH:MM:SS)", 
+                      position: "insideBottom", 
+                      offset: -20, 
+                      fill: xLabelColor, 
+                      fontSize: 13, 
+                      fontWeight: "bold" 
+                    }}
                   />
                   <YAxis 
-                    stroke={axisColor} domain={["auto", "auto"]} tick={{ fontSize: 11, fill: axisColor }}
+                    stroke={axisColor} 
+                    domain={["auto", "auto"]} 
+                    tick={{ fontSize: 11, fill: axisColor }}
                     tickMargin={10}
+                    label={{ 
+                      value: currentInputParam?.unit, 
+                      angle: -90, 
+                      position: "insideLeft", 
+                      fill: yLabelColor, 
+                      fontSize: 14, 
+                      fontWeight: "bold", 
+                      offset: 5 
+                    }}
                   />
                   <Tooltip contentStyle={{ backgroundColor: tooltipBg, border: `1px solid ${tooltipBorder}`, borderRadius: "6px", color: textColor, boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                   <Line type="stepAfter" dataKey={`input_${selectedInputGraph}`} stroke={inputColor} strokeWidth={2.5} dot={false} name="Value" isAnimationActive={false} />
