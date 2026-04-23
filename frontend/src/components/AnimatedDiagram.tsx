@@ -2,16 +2,16 @@ import React from 'react';
 
 // Define the props to pass your real-time data into the diagram
 interface AnimatedDiagramProps {
-  t1: number;
-  t2: number;
-  t3: number; 
-  t4: number; 
-  t5: number; 
-  f1: number;
-  f2: number;
-  f3: number; 
-  f4: number; 
-  f5: number; 
+  t1: number | string;
+  t2: number | string;
+  t3: number | string; 
+  t4: number | string; 
+  t5: number | string; 
+  f1: number | string;
+  f2: number | string;
+  f3: number | string; 
+  f4: number | string; 
+  f5: number | string; 
 }
 
 export default function AnimatedDiagram({t1,t2,t3,t4,t5,f1,f2,f3,f4,f5 }: AnimatedDiagramProps) {
