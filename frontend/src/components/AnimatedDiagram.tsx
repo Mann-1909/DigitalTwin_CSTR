@@ -23,15 +23,15 @@ export default function AnimatedDiagram({t1,t2,t3,t4,t5,f1,f2,f3,f4,f5 }: Animat
       <svg width="894" height="600" viewBox="0 0 894 767" fill="none" xmlns="http://www.w3.org/2000/svg" xlinkHref="http://www.w3.org/1999/xlink">
 <rect width="894" height="767" fill="url(#pattern0_1_36)"/>
 <text x="240" y="95" fill="red" fontSize="19">{t1}°C</text>
-<text x="130" y="205" fill="blue" fontSize="19">{f1}m³/s</text>
+<text x="130" y="205" fill="blue" fontSize="19">{f1}µL/s</text>
 <text x="575" y="195" fill="red" fontSize="19">{t2}°C</text>
-<text x="650" y="75" fill="blue" fontSize="19">{f2}  m³/s</text>
+<text x="650" y="75" fill="blue" fontSize="19">{f2}  µL/s</text>
 <text x="630" y="330" fill="red" fontSize="19">{t3}°C</text>
-<text x="700" y="225" fill="blue" fontSize="19">{f3}  m³/s</text>
+<text x="700" y="225" fill="blue" fontSize="19">{f3}  µL/s</text>
 <text x="250" y="540" fill="red" fontSize="19">{t4}°C</text>
-<text x="150" y="425" fill="blue" fontSize="19">{f4}  m³/s</text>
+<text x="150" y="425" fill="blue" fontSize="19">{f4}  µL/s</text>
 <text x="500" y="675" fill="red" fontSize="19">{t5}°C</text>
-<text x="300" y="600" fill="blue" fontSize="19">{f5}  m³/s</text>
+<text x="300" y="600" fill="blue" fontSize="19">{f5}  µL/s</text>
 <defs>
 <pattern id="pattern0_1_36" patternContentUnits="objectBoundingBox" width="1" height="1">
 <use xlinkHref="#image0_1_36" transform="scale(0.00111857 0.00130378)"/>

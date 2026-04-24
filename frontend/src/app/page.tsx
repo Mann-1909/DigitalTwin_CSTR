@@ -35,17 +35,19 @@ const OUTPUT_PARAMS = [
   { key: "Xa", label: "Conversion (Xa)", unit: "%" },
 ];
 
-// FIXED: All flow units reverted to m³/s. Scale removed entirely.
+// Re-enabled µL/s scaling for UI integers
+const FA_DISPLAY_SCALE = 1e6; 
+
 const INPUT_PARAMS_LIST = [
-  { key: "Fin",     label: "Total Flow",      unit: "m³/s",   step: 0,        readOnly: true },
-  { key: "Fa",      label: "Feed A Flow",     unit: "m³/s",   step: 0.0001 },
-  { key: "Fb",      label: "Feed B Flow",     unit: "m³/s",   step: 0.0001 },
-  { key: "Ca_feed", label: "Conc. A in Feed", unit: "mol/m³", step: 0.1 },
-  { key: "Cb_feed", label: "Conc. B in Feed", unit: "mol/m³", step: 0.1 },
-  { key: "T0",      label: "Inlet Temp",      unit: "K",      step: 1.0 },
-  { key: "Q",       label: "Heat Duty",       unit: "W",      step: 10.0 },
-  { key: "Tcin",    label: "Coolant Temp",    unit: "K",      step: 1.0 },
-  { key: "Fc",      label: "Coolant Flow",    unit: "m³/s",   step: 0.0001 },
+  { key: "Fin",     label: "Total Flow",      unit: "µL/s",   step: 0,      scale: FA_DISPLAY_SCALE, readOnly: true },
+  { key: "Fa",      label: "Feed A Flow",     unit: "µL/s",   step: 0.1,    scale: FA_DISPLAY_SCALE },
+  { key: "Fb",      label: "Feed B Flow",     unit: "µL/s",   step: 0.1,    scale: FA_DISPLAY_SCALE },
+  { key: "Ca_feed", label: "Conc. A in Feed", unit: "mol/m³", step: 0.1,    scale: 1 },
+  { key: "Cb_feed", label: "Conc. B in Feed", unit: "mol/m³", step: 0.1,    scale: 1 },
+  { key: "T0",      label: "Inlet Temp",      unit: "K",      step: 1.0,    scale: 1 },
+  { key: "Q",       label: "Heat Duty",       unit: "W",      step: 10.0,   scale: 1 },
+  { key: "Tcin",    label: "Coolant Temp",    unit: "K",      step: 1.0,    scale: 1 },
+  { key: "Fc",      label: "Coolant Flow",    unit: "m³/s",   step: 0.0001, scale: 1 },
 ];
 
 type CSTRData = {
@@ -67,8 +69,8 @@ export default function Dashboard() {
 
   const [inputs, setInputs] = useState<InputValues>({
     mode: "Simulation",
-    Fa: 0.01,
-    Fb: 0.01,
+    Fa: 1.388888e-6, // Matches 0.0833 L/min exactly
+    Fb: 1.388888e-6, 
     Ca_feed: 100.0,
     Cb_feed: 100.0,
     T0: 293.0,
@@ -162,6 +164,16 @@ export default function Dashboard() {
     window.open(`${httpUrl}/download_log`, "_blank");
   };
 
+  const toDisplay = (key: string, siValue: number): number => {
+    const param = INPUT_PARAMS_LIST.find((p) => p.key === key);
+    return param ? siValue * param.scale : siValue;
+  };
+  
+  const fromDisplay = (key: string, displayValue: number): number => {
+    const param = INPUT_PARAMS_LIST.find((p) => p.key === key);
+    return param ? displayValue / param.scale : displayValue;
+  };
+
   const currentParam = OUTPUT_PARAMS.find((p) => p.key === selectedOutput);
   const currentInputParam = INPUT_PARAMS_LIST.find((p) => p.key === selectedInputGraph);
   const chartData = timeWindow === 0 ? data : data.slice(-timeWindow);
@@ -179,17 +191,17 @@ export default function Dashboard() {
   const xLabelColor = "#059669"; 
   const yLabelColor = "#2563eb"; 
 
-  // FIXED: Using high precision notation to avoid 0.00 clipping for small m³/s flows
-  const flowA_disp = inputs.Fa.toPrecision(4);
-  const flowB_disp = inputs.Fb.toPrecision(4);
-  const flowTotal_disp = (inputs.Fa + inputs.Fb).toPrecision(4);
-  const coolFlow_disp = inputs.Fc.toPrecision(4);
+  // Diagram specific formatted values
+  const flowA_disp = toDisplay("Fa", inputs.Fa).toFixed(2);
+  const flowB_disp = toDisplay("Fb", inputs.Fb).toFixed(2);
+  const flowTotal_disp = toDisplay("Fin", inputs.Fa + inputs.Fb).toFixed(2);
+  const coolFlow_disp = inputs.Fc.toFixed(4);
 
   if (!mounted) return null;
 
   const renderOutputGraph = (isModal = false) => (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: isModal ? 20 : 0 }}>
+      <LineChart data={chartData} margin={{ top: 5, right: 5, left: -5, bottom: isModal ? 20 : 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
         <XAxis dataKey="time" stroke={axisColor} tick={{ fontSize: 10, fill: axisColor }} minTickGap={30} tickMargin={8} label={isModal ? { value: "System Time (HH:MM:SS)", position: "insideBottom", offset: -15, fill: xLabelColor, fontSize: 12, fontWeight: "bold" } : undefined} />
         <YAxis stroke={axisColor} domain={["auto", "auto"]} tick={{ fontSize: 10, fill: axisColor }} tickMargin={5} label={{ value: currentParam?.unit, angle: -90, position: "insideLeft", fill: yLabelColor, fontSize: 12, fontWeight: "bold", offset: 10 }} />
@@ -206,7 +218,7 @@ export default function Dashboard() {
 
   const renderInputGraph = (isModal = false) => (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: isModal ? 20 : 0 }}>
+      <LineChart data={chartData} margin={{ top: 5, right: 5, left: -5, bottom: isModal ? 20 : 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
         <XAxis dataKey="time" stroke={axisColor} tick={{ fontSize: 10, fill: axisColor }} minTickGap={30} tickMargin={8} label={isModal ? { value: "System Time (HH:MM:SS)", position: "insideBottom", offset: -15, fill: xLabelColor, fontSize: 12, fontWeight: "bold" } : undefined} />
         <YAxis stroke={axisColor} domain={["auto", "auto"]} tick={{ fontSize: 10, fill: axisColor }} tickMargin={5} label={{ value: currentInputParam?.unit, angle: -90, position: "insideLeft", fill: inputColor, fontSize: 12, fontWeight: "bold", offset: 10 }} />
@@ -217,9 +229,9 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="p-3 md:p-5 min-h-screen font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-300 overflow-x-hidden">
+    <div className="p-4 md:p-6 h-screen w-screen overflow-hidden font-sans bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 transition-colors duration-300 flex flex-col">
       
-      {/* MODAL OVERLAY FOR MAXIMIZED GRAPHS */}
+      {/* MODAL OVERLAY */}
       {maximizedGraph && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-6">
           <div className="bg-white dark:bg-slate-900 w-full max-w-5xl h-[75vh] rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col p-5">
@@ -231,7 +243,7 @@ export default function Dashboard() {
                   <><span className="text-emerald-500">🎛️</span> {currentInputParam?.label} Trend</>
                 )}
               </h2>
-              <button title="maxi" onClick={() => setMaximizedGraph(null)} className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 rounded-md transition-colors">
+              <button onClick={() => setMaximizedGraph(null)} className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 rounded-md transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
@@ -242,13 +254,13 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* COMPACT HEADER */}
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800 gap-3">
+      {/* HEADER */}
+      <header className="shrink-0 flex flex-col md:flex-row md:items-center md:justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800 gap-3">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-extrabold tracking-tight">
             CSTR <span className="text-blue-600 dark:text-blue-500 font-light">Digital Twin</span>
           </h1>
-          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex items-center justify-center w-8 h-8 rounded border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-900 shadow-sm" title="Toggle Theme">
+          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="flex items-center justify-center w-8 h-8 rounded border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-slate-900 shadow-sm">
             {resolvedTheme === 'dark' ? (
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
             ) : (
@@ -283,16 +295,16 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* 3-COLUMN ULTRA-COMPACT LAYOUT */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {/* MAIN BODY GRID */}
+      <div className="flex-grow grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-110px)] min-h-[500px]">
         
-        {/* === LEFT COLUMN: System Inputs (Span 3) === */}
-        <div className="lg:col-span-3 flex flex-col gap-2.5">
-          <h2 className="text-sm font-bold flex items-center gap-1.5 text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-1.5">
+        {/* === LEFT COLUMN: System Inputs === */}
+        <div className="lg:col-span-3 flex flex-col h-full overflow-y-auto pr-1">
+          <h2 className="shrink-0 text-sm font-bold flex items-center gap-1.5 text-slate-800 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-1.5 mb-2.5">
             <span className="text-emerald-500">🎛️</span> Input Parameters
           </h2>
           
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2 justify-start flex-grow">
             {INPUT_PARAMS_LIST.map((param) => (
               <div
                 key={param.key}
@@ -308,20 +320,21 @@ export default function Dashboard() {
                   <span className="text-[9px] text-slate-500">{param.unit}</span>
                 </div>
                 <input
-                  title={param.label}
                   type={param.readOnly ? "text" : "number"}
                   step={param.step}
-                  value={param.key === "Fin" ? parseFloat((inputs.Fa + inputs.Fb).toPrecision(4)) : parseFloat((inputs[param.key as keyof InputValues] as number).toPrecision(4))}
+                  // 6 Decimal precision guaranteed 
+                  value={param.key === "Fin" ? parseFloat(toDisplay("Fin", inputs.Fa + inputs.Fb).toFixed(6)) : parseFloat(toDisplay(param.key, inputs[param.key as keyof InputValues] as number).toFixed(6))}
                   disabled={inputs.mode === "Experiment" || param.readOnly}
                   onChange={(e) => {
                     if(param.readOnly) return;
-                    const val = parseFloat(e.target.value);
-                    if (!isNaN(val)) {
-                      updateInputsOnBackend({ [param.key]: val });
+                    const displayVal = parseFloat(e.target.value);
+                    if (!isNaN(displayVal)) {
+                      const siVal = fromDisplay(param.key, displayVal);
+                      updateInputsOnBackend({ [param.key]: siVal });
                     }
                   }}
                   onClick={(e) => e.stopPropagation()}
-                  className={`w-20 px-1.5 py-0.5 font-mono text-xs text-right rounded border focus:outline-none ${
+                  className={`w-24 px-1.5 py-0.5 font-mono text-xs text-right rounded border focus:outline-none ${
                     inputs.mode === "Experiment" || param.readOnly
                       ? "bg-slate-100 dark:bg-slate-950 text-slate-400 border-transparent cursor-not-allowed"
                       : "bg-slate-50 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:border-emerald-500"
@@ -332,57 +345,39 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* === CENTER COLUMN: Animated Diagram (Span 4) === */}
-        <div className="lg:col-span-4 flex flex-col">
-          <div className="bg-white dark:bg-slate-900 p-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 w-full h-full min-h-[350px] flex items-center justify-center">
-            <AnimatedDiagram
-              t1={inputs.T0.toFixed(1)} f1={flowA_disp}
-              t2={inputs.T0.toFixed(1)} f2={flowB_disp}
-              t3={inputs.Tcin.toFixed(1)} f3={coolFlow_disp}
-              t4={(inputs.mode === 'Simulation' ? (latestData?.simulated_Tc ?? inputs.Tcin) : (latestData?.experimental_Tc ?? inputs.Tcin)).toFixed(1)} f4={coolFlow_disp}
-              t5={currentTemp.toFixed(1)} f5={flowTotal_disp}
-            />
+        {/* === CENTER COLUMN: Animated Diagram === */}
+        <div className="lg:col-span-4 flex flex-col h-full">
+          <div className="bg-white dark:bg-slate-900 p-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 w-full h-full flex items-center justify-center relative overflow-hidden [&>div]:w-full [&>div]:h-full [&_svg]:w-full [&_svg]:h-full">
+            
+              <AnimatedDiagram
+                t1={inputs.T0.toFixed(1)} f1={flowA_disp}
+                t2={inputs.T0.toFixed(1)} f2={flowB_disp}
+                t3={inputs.Tcin.toFixed(1)} f3={coolFlow_disp}
+                t4={(inputs.mode === 'Simulation' ? (latestData?.simulated_Tc ?? inputs.Tcin) : (latestData?.experimental_Tc ?? inputs.Tcin)).toFixed(1)} f4={coolFlow_disp}
+                t5={currentTemp.toFixed(1)} f5={flowTotal_disp}
+              />
           </div>
         </div>
 
-        {/* === RIGHT COLUMN: Stacked Graphs (Span 5) === */}
-        <div className="lg:col-span-5 flex flex-col gap-3">
-          
-          {/* Graph Controls Toolbar */}
-          <div className="bg-white dark:bg-slate-900 p-1.5 px-2 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center gap-1.5">
-            <select
-              title="conc"
-              value={["Ca","Cb","Cc","Cd"].includes(selectedOutput) ? selectedOutput : "default"}
-              onChange={(e) => { if (e.target.value !== "default") setSelectedOutput(e.target.value); }}
-              className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border cursor-pointer ${
-                ["Ca","Cb","Cc","Cd"].includes(selectedOutput) ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"
-              }`}
-            >
+        {/* === RIGHT COLUMN: Stacked Graphs === */}
+        <div className="lg:col-span-5 flex flex-col gap-3 h-full">
+          <div className="shrink-0 bg-white dark:bg-slate-900 p-1.5 px-2 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center gap-1.5">
+            <select value={["Ca","Cb","Cc","Cd"].includes(selectedOutput) ? selectedOutput : "default"} onChange={(e) => { if (e.target.value !== "default") setSelectedOutput(e.target.value); }} className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border cursor-pointer ${["Ca","Cb","Cc","Cd"].includes(selectedOutput) ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"}`}>
               <option value="default" disabled>Conc.</option>
               <option value="Ca">Ca</option>
               <option value="Cb">Cb</option>
               <option value="Cc">Cc</option>
               <option value="Cd">Cd</option>
             </select>
-
-            <select
-              title="temp"
-              value={["T","Tc"].includes(selectedOutput) ? selectedOutput : "default"}
-              onChange={(e) => { if (e.target.value !== "default") setSelectedOutput(e.target.value); }}
-              className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border cursor-pointer ${
-                ["T","Tc"].includes(selectedOutput) ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"
-              }`}
-            >
+            <select value={["T","Tc"].includes(selectedOutput) ? selectedOutput : "default"} onChange={(e) => { if (e.target.value !== "default") setSelectedOutput(e.target.value); }} className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border cursor-pointer ${["T","Tc"].includes(selectedOutput) ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"}`}>
               <option value="default" disabled>Temp.</option>
               <option value="T">T</option>
               <option value="Tc">Tc</option>
             </select>
-
             <button onClick={() => setSelectedOutput("h")} className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border ${selectedOutput === "h" ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"}`}>Level</button>
             <button onClick={() => setSelectedOutput("Xa")} className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border ${selectedOutput === "Xa" ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"}`}>Conv</button>
-
             <div className="border-l border-slate-300 dark:border-slate-700 pl-1.5 ml-0.5">
-               <select title="win" value={timeWindow} onChange={(e) => setTimeWindow(parseInt(e.target.value))} className="bg-transparent text-[10px] font-mono border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 p-1 focus:border-blue-500 outline-none">
+               <select value={timeWindow} onChange={(e) => setTimeWindow(parseInt(e.target.value))} className="bg-transparent text-[10px] font-mono border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 p-1 focus:border-blue-500 outline-none">
                  <option value={30}>30s</option>
                  <option value={60}>60s</option>
                  <option value={300}>5m</option>
@@ -391,34 +386,32 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Output Graph Container */}
-          <div className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 h-[220px] flex flex-col relative group">
-            <header className="flex items-center justify-between mb-1">
+          <div className="flex-1 bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col relative group overflow-hidden">
+            <header className="shrink-0 flex items-center justify-between mb-1">
               <h2 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
                 {currentParam?.label}
               </h2>
-              <button onClick={() => setMaximizedGraph("output")} className="absolute top-2 right-2 p-1 bg-slate-100 dark:bg-slate-800 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:text-blue-500" title="Maximize">
+              <button onClick={() => setMaximizedGraph("output")} className="absolute top-2 right-2 p-1 bg-slate-100 dark:bg-slate-800 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:text-blue-500 z-10" title="Maximize">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg>
               </button>
             </header>
-            <div className="flex-grow w-full -ml-3">
+            <div className="flex-1 w-full  min-h-0">
               {renderOutputGraph()}
             </div>
           </div>
 
-          {/* Input Graph Container */}
-          <div className="bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 h-[220px] flex flex-col relative group">
-            <header className="flex items-center justify-between mb-1">
+          <div className="flex-1 bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col relative group overflow-hidden">
+            <header className="shrink-0 flex items-center justify-between mb-1">
               <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
                  {currentInputParam?.label} Trend
               </h3>
-              <button onClick={() => setMaximizedGraph("input")} className="absolute top-2 right-2 p-1 bg-slate-100 dark:bg-slate-800 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:text-emerald-500" title="Maximize">
+              <button onClick={() => setMaximizedGraph("input")} className="absolute top-2 right-2 p-1 bg-slate-100 dark:bg-slate-800 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:text-emerald-500 z-10" title="Maximize">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/></svg>
               </button>
             </header>
-            <div className="flex-grow w-full -ml-3">
+            <div className="flex-1 w-full  min-h-0">
                {renderInputGraph()}
             </div>
           </div>

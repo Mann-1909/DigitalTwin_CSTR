@@ -1,0 +1,821 @@
+Available online at
+https://journal.uitm.edu.my/ojs/index.php/MJCET
+
+e-ISSN: 2682-8588
+
+Malaysian Journal of Chemical Engineering & Technology 8(2) 2025, 52–65
+
+Malaysian Journal
+of Chemical
+Engineering and
+Technology
+
+www.jeeir.com
+
+Sensitivity analysis of reaction kinetics in saponification of
+ethyl acetate and sodium hydroxide in continuous stirred tank
+reactor (CSTR)
+Nur Hannani Mohamad Azehar1, Sherif Abdulbari Ali2*
+1,2
+
+Faculty of Chemical Engineering, Universiti Teknologi MARA, 40450 Shah Alam, Selangor
+
+ARTICLE INFO
+Article history:
+Received 29 August 2025
+Revised 03 October 2025
+Accepted 22 October 2025
+Online first
+Published 31 October 2025
+Keywords:
+CSTR
+Sensitivity analysis
+Reaction kinetics
+Saponification
+Ethyl acetate
+RSME
+Sodium hydroxide
+DOI:
+10.24191/mjcet.v8i2.8714
+
+ABSTRACT
+Continuous stirred-tank reactors (CSTRs) are integral to industrial
+chemical processes due to their uniform mixing and steady-state
+operation. The saponification of ethyl acetate with sodium hydroxide is
+a widely used model reaction for studying kinetics in CSTRs.
+Understanding the sensitivity of reaction kinetics to operating conditions
+is critical for enhancing reactor performance, ensuring consistent product
+quality, and minimizing inefficiencies. Reaction kinetics in a CSTR are
+influenced by reactant concentrations, temperature, and flow rate.
+Misidentifying or poorly optimizing these parameters can result in
+suboptimal performance and reduced conversion efficiency, posing
+challenges for industrial applications. This study conducts a detailed
+sensitivity analysis to identify the key parameters influencing the
+saponification reaction in a CSTR. It quantifies how variations in these
+parameters affect conversion efficiency and overall reaction
+performance, providing actionable insights for process optimisation. A
+reaction kinetics model was selected and validated using robust pilotplant experimental data. Parameters, including reactor temperature, were
+systematically analysed through numerical simulations to assess their
+sensitivity and impact on system performance. The validated model
+demonstrated strong agreement with experimental results, yielding
+RMSE values ranging from 0.0007 to 0.0013 and R² values between
+0.9996 and 0.9999 across 30, 40, 50, and 60 °C. Maximum deviation
+remained below 0.6 %, highlighting the model’s predictive accuracy and
+industrial applicability. Sensitivity analysis showed the greatest marginal
+benefit between 30 and 40 °C, with a peak sensitivity ratio of 0.00072,
+indicating that small temperature adjustments in this range have the
+greatest impact on the final conversion of ethyl acetate. This study sets
+
+2*Corresponding author. E-mail address: abdulbari@uitm.edu.my
+
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+53
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+itself apart from classical saponification research by integrating pilotplant data with MATLAB-based analysis, offering a validated dataset
+and a meaningful contribution to chemical reaction engineering.
+
+1.
+
+INTRODUCTION
+
+Continuous stirred tank reactors (CSTRs) are widely utilised in industrial chemical processes for their
+ability to maintain steady-state conditions, ensuring uniform product quality and scalability (Cherkasov et
+al., 2022). These reactors are essential in industries such as food processing, pharmaceuticals, and
+petrochemicals, where continuous production and strict process control are required (Hu, 2021). Their
+design facilitates homogeneity through continuous stirring, enabling uniform reactant distribution, catalyst
+presence, and heat regulation (Scott, 1991). Such features are particularly useful in reactions like the
+saponification of ethyl acetate with sodium hydroxide, which require consistent reaction environments for
+optimal performance (Harmon Ray & Villa, 2000). Recent studies have emphasised the importance of
+advanced sensitivity analysis techniques to improve such processes (Florez-Orrego et al., 2022). The
+saponification of ethyl acetate with sodium hydroxide is a widely studied reaction in chemical engineering
+education and research, typically carried out in batch or continuous stirred-tank reactors (Mesfer, 2018).
+The process produces ethanol and sodium acetate and is controlled by parameters such as temperature,
+reactant concentration, residence time, and mixing conditions, which strongly influence the overall kinetics
+(Danish et al., 2015; Ihsanullah et al., 2015).
+The operation of CSTRs depends heavily on precise control of parameters such as temperature, agitation
+speed, reactant concentration, and flow rates (Ihsanullah et al., 2015). Effective heat exchange systems in
+these reactors prevent localised temperature spikes and drops, ensuring safety and reliability (Wang et al.,
+2020). This makes them suitable for highly regulated industries such as pharmaceuticals, where consistency
+in quality is critical (Berton et al., 2020). Despite these advantages, challenges remain in enhancing reaction
+parameters for maximum yield and efficiency. Studies have shown that artificial intelligence integration
+and advanced computational methods improve optimisation processes and ensure accurate predictions for
+complex chemical systems (He, 2023; Sysoev, 2023).
+Given the importance of process optimisation in chemical engineering, enhancing CSTR performance
+remains a focus area for researchers. Variations in operational parameters influence reaction kinetics, but
+their combined effects remain poorly understood (Borovinskaya et al., 2019). Improving kinetic modelling
+techniques and conducting sensitivity analysis can address these gaps, leading to better designs for
+sustainable and cost-effective industrial applications. Multi-stage modelling techniques and sensitivity
+metrics have been used to improve reaction stages and reduce by-product formation (Sultan et al., 2024).
+This research specifically investigates the saponification of ethyl acetate with sodium hydroxide, exploring
+the impact of operational parameters on reaction kinetics and reactor performance.
+Saponification of ethyl acetate with sodium hydroxide is a well-established model reaction frequently
+employed in chemical engineering studies because of its simplicity, reproducibility, and clear kinetic
+behaviour. It proceeds as a homogeneous second-order liquid-phase reaction, where the rate is proportional
+to the product of ethyl acetate and sodium hydroxide concentrations. Prior work has characterised this
+system using batch and continuous reactors, with conductometric and titrimetric techniques commonly
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+54
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+applied to monitor conversion (Das et al., 2011; Mukhtar et al., 2017). These studies consistently report
+Arrhenius-type temperature dependence, with activation energies in the range of 41 to 48 kJ·mol⁻¹,
+confirming its suitability for kinetic modelling and validation studies (Das et al., 2011; Petek & Krajnc,
+2012). As such, it serves as an ideal benchmark for sensitivity analysis and reactor-scale investigations in
+both laboratory and pilot-plant environments.
+Other previous studies have analysed specific parameters such as flow rates and temperature in
+isolation, often neglecting their interactive effects (Ihsanullah et al., 2015; Nauman, 2008). However,
+studies focusing on sensitivity analysis for integrated parameter enhancement remain limited. For example,
+Ihsanullah et al. (2015) examined the influence of varying inlet flow rates on CSTR performance and
+reported significant effects on conversion and residence time. Similarly, Nauman (2008) investigated the
+role of reactor temperature, demonstrating that higher temperatures accelerate reaction rates. While these
+studies highlighted the importance of individual parameters, their outcomes were limited to single-variable
+perspectives without considering combined interactions. MATLAB simulations and kinetic modelling
+provide robust frameworks for evaluating the effects of multiple variables simultaneously (Levenspiel,
+1999). Recent work has demonstrated the effectiveness of dynamic parameter adjustments and AI-driven
+approaches in achieving higher process efficiency and scalability (Sultan et al., 2024). In the present study,
+a computational model will be developed and validated with experimental data to assess the impact of
+temperature, flow rates, and reactant concentration on reaction kinetics. The results aim to establish
+improved strategies for reactor operation and contribute to sustainable chemical processing methods.
+While the saponification reaction in CSTRs is a classical subject, the novelty of the present study lies
+in the integration of pilot-scale experimental data with detailed sensitivity analysis and rigorous error
+quantification. This approach extends beyond the scope of earlier works, which often relied on bench-scale
+studies or purely theoretical modelling, thereby providing both practical engineering insight and
+methodological innovation
+2.
+
+METHODOLOGY
+
+2.1 Overview
+This study investigated the sensitivity of reaction kinetics in a continuous stirred tank reactor (CSTR)
+using MATLAB, focusing on the saponification of ethyl acetate with sodium hydroxide. The methodology
+involved process modelling, mathematical model selection, model implementation using MATLAB ode45,
+simulation CSTR dynamics, sensitivity analysis, and experimental validation with optimisation (Fig.1).
+Sensitivity analysis evaluated the effects of main parameters of temperature, reactant concentrations, and
+flowrate on reactor performance.
+
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+55
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+Process Selection
+
+Mathematical Model Selection
+
+Model Implementation in MATLAB
+
+Simulation of CSTR Dynamics
+
+Sensitivity Analysis
+
+Visualisation and Interpretation
+
+Experimental Validation
+
+Fig. 1. Research methodology framework
+Source: Authors’ own data
+
+2.2 Process Selection
+The chemical reaction model selected for this study was saponification, specifically saponification of
+ethyl acetate with sodium hydroxide, which is represented by
+CH3 COOC2 H5 (l) + NaOH (aq.) → CH3 COONa (aq.) + C2 H5 OH (aq.)
+
+(1)
+
+where reactants: CH3 COOC2 H5 (ethyl acetate, CA ) and NaOH (sodium hydroxide, CB ) while products:
+CH3 COONa(sodium acetate, CC ) and C2 H5 OH (ethanol, CD )
+Reactor Assumptions:
+(i) Continuous operation, well-mixed
+(ii) Constant temperature and volume (V)
+(iii) No side reactions
+(iv) Reaction followed second-order irreversible kinetics:
+r = kCA CB
+
+(2)
+
+where r is the rate of reaction, CA is the concentration of ethyl acetate, CB is the concentration of sodium
+hydroxide, and k is the reaction rate constant.
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+56
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+2.3 Mathematical model selection
+Mass balance equations:
+For reactant CA , CB:
+dCA
+dt
+
+V
+
+dCB
+dt
+
+F
+
+= in �CA,in − CA � − kCA CB
+F
+
+= Vin �CB,in − CB � − kCA CB
+
+For products CC , CD :
+dCc
+dt
+dCD
+dt
+
+(3)
+(4)
+
+F
+
+(5)
+
+F
+
+(6)
+
+= Vin (−CC )+kCA CB
+
+= Vin (−CB )+kCA CB
+
+where CA , CB : concentrations of ethyl acetate and sodium hydroxide, CC , CD : concentrations of sodium
+acetate and ethanol, CA,in , CB,in : inlet concentration of reactants, Fin: volumetric flow rate of the reactants,
+V: reactor volume, and k: reaction rate constant
+
+Equations (1) to (7) collectively define the kinetic framework, where (1) represents the overall
+saponification reaction, (2) specifies the second-order rate law, (3)−(6) establish the component mass
+balances, and (7) introduces the Arrhenius temperature dependence of the rate constant. Together, these
+equations formed the basis for simulating the reactor dynamics.
+Temperature Dependency (Arrhenius Equation):
+Ea
+
+k = Ae−RT
+
+(7)
+
+where: A: pre-exponential factor, Ea : activation energy, R: gas constant, T: temperature
+
+The system of mass balance equations (3)−(6) was implemented in MATLAB and solved using the
+ODE45 routine. The reaction rate constant at each temperature was evaluated through the Arrhenius relation
+in Equation (7), ensuring that temperature dependence was fully incorporated into the dynamic simulation.
+Building on this framework, the kinetic parameters which are the pre-exponential factor (A) and activation
+energy (Ea ) were estimated directly from experimental data through nonlinear regression against the
+Arrhenius model. Experimental conversion data across multiple temperatures (30–60 °C) were
+simultaneously fitted to the saponification kinetic model, and a nonlinear least-squares optimisation was
+carried out to minimise the deviation between simulated and experimental conversions. From this
+regression, both A (L·mol⁻¹·min⁻¹) and Ea (J·mol⁻¹) were numerically determined with their respective
+units, providing reproducible and transparent values derived directly from experiment rather than assumed
+constants.
+
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+57
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+To evaluate model accuracy, two statistical measures were applied. The coefficient of determination
+(R²) quantified the fit between simulated and experimental data, while the root-mean-square error (RMSE)
+measured the average magnitude of deviation between predictions and observations. Together, these
+metrics provided a credible and reliable basis for assessing model performance and comparing it with
+established kinetic studies.
+2.4 Sensitivity analysis
+Mass balance simulations were conducted by varying reactor temperature from 30 to 60 °C in
+10 °C increments. At each set point, the validated kinetic model computed the 15-minute conversion;
+thermal sensitivity was then determined from the conversion differences between temperature steps, and
+model accuracy was assessed against experimental data.
+2.5 Validation and optimisation
+The results from simulation were validated by comparing MATLAB outputs with experimental
+conversion data. MATLAB tools were used to optimise conditions to maximise reactant conversion while
+minimizing energy use and cost. Results under optimised conditions were verified through additional
+simulations to confirm practical feasibility.
+2.6 Visualisation and interpretation
+The simulation outputs, including transient and steady-state conversion profiles, sensitivity trends, and
+parameter effects, were visualised through MATLAB plots. Graphs highlighted critical factors for
+performance improvement, aiding decision-making, and optimisation.
+3.
+
+RESULTS AND DISCUSSION
+
+3.1 Model validation
+The proposed kinetic model was assessed against experimental conversion data at four operating
+temperatures (30, 40, 50, and 60 °C). These experimental data were generated in a BP1000 pilot-plant
+CSTR with 2.5 L working volume using equimolar feeds of 0.1 M ethyl acetate and 0.1 M NaOH, stirred
+at 180 rpm. Samples were withdrawn at 1, 3, 6, 9, 12, and 15 min, quenched with HCl, and analysed by
+conductivity via a calibration curve and back-titration to determine conversion. As summarised in the
+Appendix, the root‐mean‐square error (RMSE) remained very low, ranging from 0.0007 to 0.0013, while
+the coefficient of determination (R²) exceeded 0.9996 under all conditions, indicating near‐perfect
+agreement between simulation and experiment.
+Moreover, a full set of point-by-point results in the table (Appendix) further confirms this excellent fit,
+where at each temperature the simulated conversion profiles track the experimental data almost exactly,
+with only minor deviations at early and mid-reaction times. These detailed comparisons verify that the
+second-order kinetic expression reliably describes both the temporal evolution and plateau behaviour of the
+saponification reaction across the entire temperature range. These four data sets emphasise the accuracy of
+the kinetic parameters and support confident application of this model for reactor design, scale‐up
+calculations, and even real‐time digital‐twin control of the saponification process.
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+58
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+3.2 Conversion – times profile
+Fig. 2 presents all four kinetic profiles in a single plot to highlight the effect of temperature on reaction
+rate. The progressively steeper initial slopes with increasing temperature directly reflect the Arrhenius
+dependence of the rate constant. For instance, nearly 50% conversion is reached in under 3 min at 60 °C,
+whereas the 30 °C curve takes nearly 9 min. After approximately 12 min, all curves converge near their
+asymptotic conversions, ranging from 0.43 to 0.45, indicating that higher temperatures accelerate the
+approach to steady state but do not significantly alter the ultimate conversion. This composite visualisation
+thus serves as a rapid tool for selecting residence times across a target conversion range.
+
+Fig. 2. Conversion profiles (X) as a function of time for each temperature
+Source: Authors’ own data
+
+In Fig. 3 at 30 °C, conversion climbs from 0 to 0.136 in the first minute and reaches 0.442 by 15 min.
+The model yields an RMSE of 0.0012 and R² of 0.9998, with a maximum point‐wise deviation of 0.54% at
+t = 3 min. The slight underprediction at early times with an error of 0.147% suggests minor thermal
+gradients or sampling lags in the experimental setup. Still, overall, the second‐order kinetic law accurately
+captures the slow-to-moderate rate behaviour at this temperature.
+
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+59
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+Fig. 3. Conversion vs time at 30 °C
+Source: Authors’ own data
+
+At 40 °C, conversion reaches 0.334 by 3 min and 0.451 by 15 min as shown in Fig. 4. The exceptionally
+low RMSE of 0.0007 and R² of 0.9999 indicate an almost exact match. The largest single‐point error
+(0.29%) occurs at t = 15 min, likely due to precision limits in analytical measurement. The minimal
+residuals confirm that mass‐transfer limitations are negligible and that the kinetic model parameters are
+most accurate in the mid‐range temperature.
+
+Fig. 4. Conversion vs time at 40 °C
+Source: Authors’ own data
+
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+60
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+The trend depicted in Fig. 5 shows that at 50 °C, the reaction accelerates markedly, achieving 0.380
+conversion by 3 min and plateauing near 0.455 by 15 min. The RMSE increases slightly to 0.0013, with
+the maximum error of 0.59 % occurring at t = 3 min. This elevated early‐time deviation may reflect transient
+heat‐transfer effects as the reactor warms rapidly, but the R² of 0.9997 confirms that the overall kinetic
+form remains valid.
+
+Fig. 5. Conversion vs time at 50 °C
+Source: Authors’ own data
+
+The graphical representation in Fig. 6 at 60 °C highlights that conversion reaches 0.409 in 3 min and
+0.456 by 15 min. The RMSE of 0.0012 and R² of 0.9996 indicate excellent agreement, with a maximum
+error of 0.56% at time, t = 3 min. The slightly larger residuals at early times again point to rapid heating
+transients, yet the fit confirms that even under the fastest kinetics, the model reliably predicts conversion
+within industrial‐acceptable error bounds (< 1%).
+Model-accuracy guidelines recommend keeping errors below 2% for detailed models and below 5%
+for broader applications (Leveneur 2023; Álvarez et al. 2021). Even small experimental uncertainties can
+otherwise amplify during parameter estimation (Alberton et al. 2009). In this study, RMSE values of 0.0007
+−0.0013, R² > 0.9997 and error percentage below 1% fall comfortably within those limits, demonstrating
+high reliability. This aligns with the widely accepted benchmark that a model is considered credible when
+R² approaches 1 and error metrics such as mean squared error (MSE), root mean square error (RMSE),
+mean absolute percentage error (MAPE), and mean absolute error (MAE) approach zero (Temizel & Soylu
+2025).
+
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+61
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+Fig. 6. Conversion vs time at 60 °C
+Source: Authors’ own data
+
+3.3 Determination of the most influential kinetic parameter
+A straightforward sensitivity analysis based on final conversions at 30, 40, 50, and 60 °C in Table 1
+shows that raising the temperature from 30 to 40 °C delivers the largest gain in conversion, which is
+ΔX = 0.0072, corresponding to the highest sensitivity per degree Celsius. Above 40 °C, the incremental
+benefit of heating falls off sharply, where sensitivity drops to 0.00040 per degree Celsius for the 40 °C to
+50 °C step and to just 0.00008 per degree Celsius from 50 to 60 °C. Similar behaviour is seen in the study
+of ethyl acetate saponification (Mukhtar et al., 2017) and in reactor modelling efforts (Wijayarathne &
+Wasalathilake, 2014), which report that while reaction rates increase strongly with temperature at lower
+ranges, the incremental gains per degree reduce as temperature rises, likely due to diffusion, heat transfer
+or equilibrium-type limitations.
+Table 1 Sensitivity analysis based on final conversion at different temperatures
+Temperature
+(°C)
+
+Final Conversion
+(X)
+
+ΔX (Change in
+Conversion)
+
+ΔT
+(°C)
+
+Sensitivity
+(ΔX/ΔT)
+
+30
+40
+
+0.4440
+0.4512
+
+–
+0.0072
+
+–
+10
+
+–
+0.00072
+
+50
+60
+
+0.4552
+0.4560
+
+0.0040
+0.0008
+
+10
+10
+
+0.00040
+0.00008
+
+Source: Authors’ own data
+
+In practical terms, this means that temperature is indeed the dominant kinetic control parameter, but its
+impact is most pronounced in the lower-temperature window. Beyond about 40 °C, the reaction is
+approaching its kinetic limit and potentially equilibrium, so further heating yields diminishing returns in
+conversion. Similar findings have been reported in the literature, where Mukhtar et al. (2017) showed that
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+62
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+while the rate constant for saponification increases with temperature up to 70 °C, the conversion curves
+tend to flatten at higher temperatures, reflecting reduced incremental gains. A related study by Shafiq et al.
+(2015) also observed that above ~30 to 35 °C, further temperature increases produced only minor
+improvements in conversion despite higher rate constants. Likewise, Mesfer (2018) found that conversion
+rises sharply between 20 to 40 °C, but additional heating beyond this range resulted in progressively smaller
+benefits. Together, these findings support the conclusion that the reaction exhibits diminishing temperature
+sensitivity beyond approximately 40 °C. Thus, for both laboratory enhancement and industrial scale-up,
+efforts to maximise yield should focus on precise control within the 30 to 40 °C range, where each degree
+of heating delivers the greatest boost while avoiding unnecessary energy expenditure at higher
+temperatures.
+4.
+
+CONCLUSION
+
+In conclusion, this study demonstrates that a kinetic modeling approach, supported by sensitivity analysis,
+can reliably capture the behavior of the saponification of ethyl acetate in a CSTR and translate laboratory
+observations into a predictive framework for process design. The identification of temperature as the
+dominant factor highlights the critical importance of thermal control in optimizing reactor performance and
+minimizing variability. The developed model, grounded in Arrhenius kinetics, provides a practical
+foundation for “what-if” process evaluations, scale-up, and waste minimization strategies. Beyond its
+specific application, the methodology illustrates how experimentally validated kinetic modeling can bridge
+the gap between bench-scale experimentation and industrial implementation. Future extensions of this
+approach to broader temperature ranges and variable operating conditions will further strengthen its
+applicability to real-world reactor systems.
+ACKNOWLEDGEMENTS/FUNDING
+The study was supported by the Faculty of Chemical Engineering, Universiti Teknologi MARA, Shah
+Alam, Selangor, Malaysia.
+CONFLICT OF INTEREST STATEMENT
+The authors declare that there are no financial, professional, or personal interests that could be construed
+as influencing the content, results, or interpretations presented in this research.
+AUTHORS’ CONTRIBUTIONS
+Nur Hannani Mohamad Azehar: Conceptualisation, methodology, formal analysis, investigation and
+writing-original draft and editing; Sherif Abdulbari Ali: Conceptualisation, supervision, writing- review
+and editing, and validation.
+
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+63
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+REFERENCES
+Alberton, A. L., Schwaab, M., Schmal, M., & Pinto, J. C. (2009). Experimental errors in kinetic tests and its influence
+on the precision of estimated parameters: Part I-Analysis of first-order reactions. Chemical Engineering Journal,
+155(3), 816–823. https://doi.org/10.1016/j.cej.2009.08.012
+Álvarez, C., Espinel, E., & Noriega, C. J. (2021). Study of different alternatives for dynamic simulation of a steam
+generator using MATLAB. Fluids, 6(5), 175. https://doi.org/10.3390/fluids6050175
+Berton, M., de Souza, J. M., Abdiaj, I., McQuade, D. T., & Snead, D. R. (2020). Scaling continuous API synthesis from
+milligram to kilogram: extending the enabling benefits of micro to the plant. International Journal of Flow
+Chemistry, 10(1), 73–92. https://doi.org/10.1007/s41981-019-00060-x
+Borovinskaya, E., Khaydarov, V., Strehle, N., Musaev, A., & Reschetilowski, W. (2019). Experimental studies of ethyl
+acetate saponification using different reactor systems: The effect of volume flow rate on reactor performance and
+pressure drop. Applied Sciences, 9(3), 532. https://doi.org/10.3390/app9030532
+Cherkasov, N., Adams, S. J., Bainbridge, E. G. A., & Thornton, J. A. M. (2022). Continuous stirred tank reactors in
+fine chemical synthesis for efficient mixing, solids-handling, and rapid scale-up. International Reaction Chemistry
+and Engineering, 8(2), 266–277. https://doi.org/10.1039/d2re00232a
+Danish, M., Khaloofah, M., Mesfer, A., Rashid, M., & Al Mesfer, M. K. (2015). Effect of operating conditions on
+CSTR performance: An experimental study. International Journal of Engineering Research and Applications,
+5(2), 74–78.
+Das, K., Sahoo, P., Sai Baba, M., Murali, N., & Swaminathan, P. (2011). Kinetic studies on saponification of ethyl
+acetate using an innovative conductivity-monitoring instrument with a pulsating sensor. International Journal of
+Chemical Kinetics, 43(11), 648–656. https://doi.org/10.1002/kin.20597
+Florez-Orrego, D., Sharma, S., & Navabi, S. (2022). Editorial: Integration and optimization in the chemical process
+industry. Frontiers in Chemical Engineering, 4, 961022. https://doi.org/10.3389/fceng.2022.961022.
+Harmon Ray, W. & Villa, C. (2000). Nonlinear dynamics found in polymerization processes — A review. Chemical
+Engineering Science, 55(2), 275–290. https://doi.org/10.1016/s0009-2509(99)00323-1.
+He, Z. (2023). Optimization of chemical environmental protection and energy sustainable development. Applied and
+Computational Engineering, 3(1), 211–215. https://doi.org/10.54254/2755-2721/3/20230414
+Hu, C. (2021). Reactor design and selection for effective continuous manufacturing of pharmaceuticals. Journal of
+Flow Chemistry, 11, 242–262. https://doi.org/10.1007/s41981-021-00164-3
+Ihsanullah, I., Ahmad, M. I., Ullah, I., Ahmad, M. I., & Younas, M. (2015). Optimization of saponification reaction in
+a continuous stirred tank reactor (CSTR) using design of experiments. Pakistan Journal of Engineering and
+Applied Sciences, 16. https://www.researchgate.net/publication/274635862
+Leveneur, S. (2023). Kinetic modelling: Regression and validation stages, a compulsory tandem for kinetic model
+assessment. Canadian Journal of Chemical Engineering, 101(12), 7078–7101. https://doi.org/10.1002/cjce.24956
+Levenspiel, O. (1999). Chemical Reaction Engineering (3rd ed.). Wiley India.
+Mesfer, M. K. A. (2018). Experimental study of batch reactor performance for ethyl acetate saponification.
+International Journal of Chemical Reactor Engineering, 16(1), 20160174. https://doi.org/10.1515/ijcre-20160174
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+64
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+Mukhtar, A., Shafiq, U., Qazi, M. O., Qadir, H. A., Qizilbash, M., & Awan, B. A. (2017). Kinetics of alkaline hydrolysis
+of ethyl acetate by conductometric measurement approach over temperature ranges (298.15–343.15 K). Austin
+Chemical Engineering, 4(1), 1046.
+Muktar, A., Shafiq, U., Khan, A., Qizilbash, M., & Abdul Qadir, H. (2015). Estimation of parameters of Arrhenius
+equation for ethyl acetate saponification reaction. Research Journal of Chemical Sciences, 5(11), 46–50.
+Nauman, E. B. (2008). Chemical reactor design, optimization, and scaleup (First edition). Wiley & Sons, Inc.
+Petek, A., & Krajnc, M. (2012). The enthalpy and entropy of activation for ethyl acetate saponification. International
+Journal of Chemical Kinetics, 44(10), 692–698. https://doi.org/10.1002/kin.20712
+Scott, K. (1991). The continuous stirred tank electrochemical reactor. An overview of dynamic and steady state analysis
+for
+design
+and
+modelling.
+Journal
+of
+Applied
+Electrochemistry,
+21(11),
+945–960.
+https://doi.org/10.1007/BF01077579
+Sultan, F., Lodhi, M. W., Fatima, R., Ishaq, M. S., & Chambashi, G. (2024). Computing the solution trajectories, steady
+state approximation, and sensitivity analysis in complex chemical reaction mechanism. AIP Advances, 14(4).
+045027. https://doi.org/10.1063/5.0203877
+Sysoev, A. (2023). Sensitivity analysis of mathematical models. Computation (Basel), 11(8), 159.
+https://doi.org/10.3390/computation11080159.
+Temizel, B., & Soylu, E. N. (2025). Modeling of diatom indices (Bdı, Tdı and Gdı) based on the physico-chemical
+structure of the river ecosystem with machine learning and artificial intelligence methods; A comparative example.
+Environment, Development and Sustainability, 1–29. https://doi.org/10.1007/s10668-025-06186-4
+Wang, Z., Zhang, Y., & Li, D. (2020). Temperature Optimization Control of CSTR. 2020 IEEE International
+Conference on Information Technology, Big Data and Artificial Intelligence (ICIBA), 1, 1040–1043.
+https://doi.org/10.1109/ICIBA50161.2020.9276793
+Wijayarathne, U., & Wasalathilake, K. (2014). Aspen Plus simulation of saponification of ethyl acetate in the presence
+of sodium hydroxide in a plug flow reactor. Journal of Chemical Engineering & Process Technology, 5(6), 205.
+http://dx.doi.org/10.4172/2157-7048.1000205
+
+© 2025 by the authors. Submitted for possible open access publication under the terms and
+conditions of the Creative Commons Attribution (CC BY) license
+(http://creativecommons.org/licenses/by/4.0/).
+
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+65
+
+Nur Hannani Mohamad Azehar et al. / Malaysian Journal of Chemical Engineering and Technology (2025) Vol. 8, No. 2
+
+SUPPLYMENTARY MATERIALS
+
+A.
+
+Data conversion comparison and model validation metrics:
+
+A.1.
+
+Model validation metrics for CSTR Saponification kinetic model at different temperatures
+
+Temperature (°C)
+
+RMSE
+
+R²
+
+Error Range (%)
+
+Max Error (%)
+
+30
+
+0.0012
+
+0.9998
+
+0.05–0.53
+
+0.53
+
+40
+
+0.0007
+
+0.9999
+
+0.03–0.29
+
+0.29
+
+50
+
+0.0013
+
+0.9997
+
+0.06–0.59
+
+0.59
+
+60
+
+0.0012
+
+0.9996
+
+0.0002–0.56
+
+0.56
+
+A.2.
+
+Experimental and Simulated Conversion at 30 °C
+
+Time (min)
+
+Conversion Experimental (X)
+
+Conversion Simulated (X)
+
+Error (%)
+
+1
+3
+6
+9
+12
+15
+
+0.1360
+0.2800
+0.3760
+0.4140
+0.4340
+0.4420
+
+0.1358
+0.2803
+0.3740
+0.4146
+0.4342
+0.4442
+
+0.1475
+0.1022
+0.5376
+0.1514
+0.0512
+0.4864
+
+Conversion Simulated (X)
+0.1789
+0.3335
+0.4122
+0.4387
+0.4486
+0.4525
+
+Error (%)
+0.1675
+0.1463
+0.0373
+0.1537
+0.0382
+0.2915
+
+A.3.
+
+Experimental and Simulated Conversion at 40 °C
+
+Time (min)
+1
+3
+6
+9
+12
+15
+A.4.
+
+Experimental and Simulated Conversion at 50 °C
+
+Time (min)
+1
+3
+6
+9
+12
+15
+A.5.
+
+Conversion Experimental (X)
+0.1792
+0.3340
+0.4120
+0.4380
+0.4488
+0.4512
+
+Conversion Experimental (X)
+0.2272
+0.3800
+0.4380
+0.4512
+0.4540
+0.4552
+
+Conversion Simulated (X)
+0.2268
+0.3778
+0.4360
+0.4500
+0.4537
+0.4547
+
+Error (%)
+0.1868
+0.5914
+0.4470
+0.2578
+0.0621
+0.1077
+
+Experimental and Simulated Conversion at 60 °C
+
+Time (min)
+1
+3
+6
+9
+12
+15
+
+Conversion Experimental (X)
+0.2756
+0.4090
+0.4480
+0.4540
+0.4552
+0.4560
+
+Conversion Simulated (X)
+0.2744
+0.4113
+0.4484
+0.4540
+0.4549
+0.4550
+
+Error (%)
+0.4476
+0.5634
+0.0888
+0.0003
+0.0653
+0.2085
+
+https://doi.org/10.24191/mjcet.v8i2.8714
+©Authors, 2025
+
+
