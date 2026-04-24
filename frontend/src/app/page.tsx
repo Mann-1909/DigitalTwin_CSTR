@@ -73,10 +73,10 @@ export default function Dashboard() {
     Fb: 1.388888e-6, 
     Ca_feed: 100.0,
     Cb_feed: 100.0,
-    T0: 293.0,
+    T0: 303.0,
     Q: 0.0,
-    Tcin: 293.0,
-    Fc: 0.01,
+    Tcin: 303.0,
+    Fc: 0.00001,
   });
 
   const inputsRef = useRef(inputs);
@@ -243,7 +243,7 @@ export default function Dashboard() {
                   <><span className="text-emerald-500">🎛️</span> {currentInputParam?.label} Trend</>
                 )}
               </h2>
-              <button onClick={() => setMaximizedGraph(null)} className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 rounded-md transition-colors">
+              <button title="Close" onClick={() => setMaximizedGraph(null)} className="p-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 rounded-md transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
               </button>
             </div>
@@ -320,6 +320,7 @@ export default function Dashboard() {
                   <span className="text-[9px] text-slate-500">{param.unit}</span>
                 </div>
                 <input
+                  title="te"
                   type={param.readOnly ? "text" : "number"}
                   step={param.step}
                   // 6 Decimal precision guaranteed 
@@ -362,14 +363,14 @@ export default function Dashboard() {
         {/* === RIGHT COLUMN: Stacked Graphs === */}
         <div className="lg:col-span-5 flex flex-col gap-3 h-full">
           <div className="shrink-0 bg-white dark:bg-slate-900 p-1.5 px-2 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 flex justify-between items-center gap-1.5">
-            <select value={["Ca","Cb","Cc","Cd"].includes(selectedOutput) ? selectedOutput : "default"} onChange={(e) => { if (e.target.value !== "default") setSelectedOutput(e.target.value); }} className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border cursor-pointer ${["Ca","Cb","Cc","Cd"].includes(selectedOutput) ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"}`}>
+            <select title="concentration" value={["Ca","Cb","Cc","Cd"].includes(selectedOutput) ? selectedOutput : "default"} onChange={(e) => { if (e.target.value !== "default") setSelectedOutput(e.target.value); }} className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border cursor-pointer ${["Ca","Cb","Cc","Cd"].includes(selectedOutput) ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"}`}>
               <option value="default" disabled>Conc.</option>
               <option value="Ca">Ca</option>
               <option value="Cb">Cb</option>
               <option value="Cc">Cc</option>
               <option value="Cd">Cd</option>
             </select>
-            <select value={["T","Tc"].includes(selectedOutput) ? selectedOutput : "default"} onChange={(e) => { if (e.target.value !== "default") setSelectedOutput(e.target.value); }} className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border cursor-pointer ${["T","Tc"].includes(selectedOutput) ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"}`}>
+            <select title="temperature" value={["T","Tc"].includes(selectedOutput) ? selectedOutput : "default"} onChange={(e) => { if (e.target.value !== "default") setSelectedOutput(e.target.value); }} className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border cursor-pointer ${["T","Tc"].includes(selectedOutput) ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"}`}>
               <option value="default" disabled>Temp.</option>
               <option value="T">T</option>
               <option value="Tc">Tc</option>
@@ -377,7 +378,7 @@ export default function Dashboard() {
             <button onClick={() => setSelectedOutput("h")} className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border ${selectedOutput === "h" ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"}`}>Level</button>
             <button onClick={() => setSelectedOutput("Xa")} className={`flex-1 p-1 text-[10px] uppercase font-bold tracking-wider rounded border ${selectedOutput === "Xa" ? "bg-blue-50 border-blue-400 text-blue-700 dark:bg-slate-950 dark:border-blue-500 dark:text-blue-400" : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500"}`}>Conv</button>
             <div className="border-l border-slate-300 dark:border-slate-700 pl-1.5 ml-0.5">
-               <select value={timeWindow} onChange={(e) => setTimeWindow(parseInt(e.target.value))} className="bg-transparent text-[10px] font-mono border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 p-1 focus:border-blue-500 outline-none">
+               <select title="time" value={timeWindow} onChange={(e) => setTimeWindow(parseInt(e.target.value))} className="bg-transparent text-[10px] font-mono border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300 p-1 focus:border-blue-500 outline-none">
                  <option value={30}>30s</option>
                  <option value={60}>60s</option>
                  <option value={300}>5m</option>

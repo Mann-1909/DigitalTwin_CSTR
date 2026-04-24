@@ -13,11 +13,12 @@ NOMINAL_HEIGHT_M = 0.1667      # Nominal liquid height (m)
 # Tuned to maintain height at exactly 16.67 cm for a total flow of 2.777e-6 m3/s
 VALVE_COEFFICIENT = 6.803e-6   
 
-# ── Kinetics (Irreversible 2nd Order) ──
-# Derived directly from the paper's textual regression to hit 44.2% - 45.6%
-PRE_EXPONENTIAL_FACTOR = 2.5e-4 # A (m³/mol·s)
-ACTIVATION_ENERGY      = 5200.0 # Ea (J/mol)
-GAS_CONSTANT           = 8.314  # R (J/mol·K)
+# ── Kinetics (Reversible 2nd Order: r = k_f·Ca·Cb − k_r·Cc·Cd) ──
+# Fitted to paper data: 15/16 conversion targets within range
+PRE_EXPONENTIAL_FACTOR = 0.54     # A  (m³/(mol·s))
+ACTIVATION_ENERGY      = 23800.0  # Ea (J/mol)
+EQUILIBRIUM_CONSTANT   = 1.70     # Keq = k_f / k_r (dimensionless)
+GAS_CONSTANT           = 8.314    # R  (J/(mol·K))
 
 # ── Thermodynamics ──
 ENTHALPY_REACTION = -50000.0    # J/mol (Exothermic)

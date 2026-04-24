@@ -66,10 +66,10 @@ app.add_middleware(
 )
 
 class CSTRDigitalTwin:
-    def __init__(self):
+    def __init__(self, T0=303.0):
         # Initial state [Ca, Cb, Cc, Cd, T, Tc, h]
-        # Start at Ca=50, Cb=50 so the conversion calculation works properly
-        self.state = [50.0, 50.0, 0.0, 0.0, 303.0, 303.0, config.NOMINAL_HEIGHT_M]
+        # Ca=Cb=50 mol/m³ (equimolar feed diluted 1:1), T and Tc start at inlet T0
+        self.state = [50.0, 50.0, 0.0, 0.0, float(T0), float(T0), config.NOMINAL_HEIGHT_M]
         self.time  = 0.0
 
     def odes(self, t, y, Fa, Fb, Ca_feed, Cb_feed, T0, Q, Tcin, Fc):
@@ -85,9 +85,10 @@ class CSTRDigitalTwin:
         V    = config.CROSS_SECTION_M2 * h                              
         Fout = config.VALVE_COEFFICIENT * math.sqrt(h)                   
 
-        # Irreversible kinetics (No Keq, no reverse rate)
+        # Reversible kinetics: r = k_f*Ca*Cb - k_r*Cc*Cd
         k_f  = config.PRE_EXPONENTIAL_FACTOR * math.exp(-config.ACTIVATION_ENERGY / (config.GAS_CONSTANT * T))
-        rate = k_f * Ca * Cb 
+        k_r  = k_f / config.EQUILIBRIUM_CONSTANT
+        rate = k_f * Ca * Cb - k_r * Cc * Cd
 
         dCa_dt = (Fa * Ca_feed - Fin * Ca) / V - rate
         dCb_dt = (Fb * Cb_feed - Fin * Cb) / V - rate
@@ -118,7 +119,7 @@ class CSTRDigitalTwin:
         T0      = inputs.get("T0", 303.0)
         Q       = inputs.get("Q", 0.0)
         Tcin    = inputs.get("Tcin", 303.0)
-        Fc      = inputs.get("Fc", 0.01)
+        Fc      = inputs.get("Fc", 1e-5)
 
         sol = solve_ivp(
             self.odes,
@@ -142,7 +143,8 @@ class CSTRDigitalTwin:
         Xa      = max(0.0, min(1.0, Xa))
 
         k_f      = config.PRE_EXPONENTIAL_FACTOR * math.exp(-config.ACTIVATION_ENERGY / (config.GAS_CONSTANT * T))
-        rate_net = k_f * Ca * Cb
+        k_r      = k_f / config.EQUILIBRIUM_CONSTANT
+        rate_net = k_f * Ca * Cb - k_r * Cc * Cd
 
         return {
             "Ca": float(Ca), "Cb": float(Cb),
@@ -154,7 +156,7 @@ class CSTRDigitalTwin:
             "rate_net": round(rate_net, 6),
         }
 
-twin = CSTRDigitalTwin()
+twin = CSTRDigitalTwin(T0=303.0)
 logger = CSTRLogger()
 sim_state = {"is_running": False}
 
@@ -167,13 +169,19 @@ gui_inputs = {
     "T0":      303.0,   
     "Q":       0.0,     
     "Tcin":    303.0,   
-    "Fc":      0.01,    
+    "Fc":      1e-5,    
 }
 
 @app.post("/update_inputs")
 async def update_inputs(inputs: dict):
-    global gui_inputs
+    global gui_inputs, twin
+    new_T0 = inputs.get("T0", gui_inputs.get("T0"))
+    old_T0 = gui_inputs.get("T0")
     gui_inputs.update(inputs)
+    # Always re-init twin when T0 changes so conversion matches the new temp
+    if new_T0 != old_T0:
+        twin = CSTRDigitalTwin(T0=new_T0)
+        logger.reset_log()
     return {"status": "success"}
 
 @app.post("/control")
@@ -182,12 +190,17 @@ async def control_sim(command: dict):
     cmd = command.get("action")
     
     if cmd == "start":
+        # Auto-reset if the twin's temperature doesn't match the requested T0
+        current_T0 = gui_inputs.get("T0", 303.0)
+        if abs(twin.state[4] - current_T0) > 1.0 or twin.time == 0.0:
+            twin = CSTRDigitalTwin(T0=current_T0)
+            logger.reset_log()
         sim_state["is_running"] = True
     elif cmd == "stop":
         sim_state["is_running"] = False
     elif cmd == "reset":
         sim_state["is_running"] = False
-        twin = CSTRDigitalTwin() 
+        twin = CSTRDigitalTwin(T0=gui_inputs.get("T0", 303.0))
         logger.reset_log()       
         
     return {"status": "success"}
